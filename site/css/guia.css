@@ -1,0 +1,68 @@
+/* Guía práctica de prompting — estilos de la versión web */
+
+/* ---- Base (del diseño) ---- */
+html{scroll-behavior:smooth;scroll-padding-top:76px;-webkit-print-color-adjust:exact;print-color-adjust:exact;-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;font-family:"Karla",system-ui,sans-serif;color:#333C3F;font-size:16px;line-height:1.65}
+h1,h2,h3,h4{font-family:"Inter",system-ui,sans-serif;color:#012C3D;line-height:1.2;margin:0}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:5px}
+table{border-collapse:collapse;width:100%}
+a{color:#D32B36;text-decoration:none}
+a:hover{color:#012C3D;text-decoration:underline}
+[hidden]{display:none!important}
+:focus-visible{outline:none;box-shadow:var(--shadow-focus)}
+
+[data-show-mobile]{display:none}
+@media (max-width:640px){
+  table{font-size:13px!important}
+  td,th{padding:6px 8px!important}
+  [data-hide-mobile]{display:none!important}
+  [data-show-mobile]{display:inline}
+}
+
+.skip-link{position:absolute;left:12px;top:-60px;z-index:50;background:#012C3D;color:#fff;padding:10px 14px;border-radius:8px;font:600 14px/1 Inter,sans-serif}
+.skip-link:focus{top:12px;color:#fff;text-decoration:none}
+
+/* ---- Logo (componente Logo del design system) ---- */
+.st-logo{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1}
+.st-logo img{width:auto;display:block}
+.st-logo__desc{font-family:var(--font-display);font-weight:var(--fw-semibold);letter-spacing:.01em;color:var(--st-petroleo);align-self:stretch;text-align:left}
+
+/* ---- Button primario (componente Button del design system) ---- */
+.st-btn{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:var(--fw-semibold);letter-spacing:.01em;border-radius:var(--radius-pill);cursor:pointer;background:var(--st-coral);color:var(--st-white);border:1.5px solid var(--st-coral);box-shadow:var(--shadow-coral);transition:transform var(--dur-fast) var(--ease-standard),filter var(--dur-fast) var(--ease-standard)}
+.st-btn:hover{filter:brightness(1.06)}
+.st-btn:active{transform:scale(.97)}
+.st-btn:focus-visible{box-shadow:var(--shadow-coral),var(--shadow-focus)}
+.st-btn--sm{font-size:var(--fs-sm);padding:8px 16px;gap:8px;min-height:36px}
+.st-btn--md{font-size:var(--fs-md);padding:11px 22px;gap:9px;min-height:44px}
+.st-btn--lg{font-size:var(--fs-lg);padding:14px 30px;gap:10px;min-height:52px}
+.st-btn--full{width:100%}
+
+/* ---- Barra superior ---- */
+.tool-btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #C3C9C4;border-radius:8px;background:#fff;font:600 14px/1 Inter,sans-serif;color:#012C3D;cursor:pointer;white-space:nowrap}
+.tool-btn:hover{border-color:#012C3D}
+
+/* ---- Índice lateral ---- */
+#banner:not([hidden]){display:flex}
+.drawer-item{display:grid;grid-template-columns:30px minmax(0,1fr) 22px;gap:8px;align-items:center;padding:10px 20px;text-decoration:none;color:#012C3D;font:500 14px/1.35 Karla,sans-serif;background:transparent}
+.drawer-item:hover{background:#F7F8F3;text-decoration:none;color:#012C3D}
+.drawer-item.is-current{background:#DCEEF0;font-weight:700}
+.drawer-item__num{font:700 13px/1 Inter,sans-serif;color:#5CA8AF}
+.drawer-item__mark{font:700 13px/1 Inter,sans-serif;color:#1F8A5B;text-align:right}
+.drawer-item__mark.is-bookmark{color:#D32B36}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .st-btn,#progress-bar{transition:none!important}
+}
+
+/* ---- PDF / impresión ---- */
+@media print{
+  [data-noprint],.skip-link{display:none!important}
+  body{font-size:11.5pt}
+  @page{margin:16mm 14mm}
+  main{padding:0!important;max-width:none!important}
+  #portada{background:#fff!important;border:0!important}
+  #portada>div{padding:0!important}
+}

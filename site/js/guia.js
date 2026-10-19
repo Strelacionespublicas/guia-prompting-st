@@ -155,10 +155,62 @@
     flash('Guardado. Llegaste hasta: ' + label(idx));
   }
 
-  function printPdf() {
-    closeDrawer(false);
+  // ---- PDF "Mi avance" (lectura + respuestas), generado en el navegador ----
+  var pdfLib = null;
+  function loadPdfLib() {
+    if (!pdfLib) {
+      pdfLib = import(new URL('js/pdf-avance.js', document.baseURI).href).then(function () { return window.GuiaPdfAvance; });
+      pdfLib.catch(function () { pdfLib = null; });
+    }
+    return pdfLib;
+  }
+  function toDataUrl(src) {
+    return fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+      return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(b); });
+    }).catch(function () { return null; });
+  }
+  function avanceData() {
+    var sections = [], byTitle = {}, checksDone = 0, checksTotal = 0;
+    Object.keys(fields).forEach(function (id) {
+      var host = document.querySelector('[data-field="' + id + '"]');
+      var parts = (host.getAttribute('data-label') || id).split(' › ');
+      var title = parts.shift();
+      var sec = byTitle[title];
+      if (!sec) { sec = byTitle[title] = { title: title, items: [], done: 0, total: 0 }; sections.push(sec); }
+      var v = values[id], isCheck = fields[id].tagName === 'INPUT';
+      sec.total++;
+      if (isCheck) checksTotal++;
+      if (v === true || (typeof v === 'string' && v.trim())) {
+        sec.done++;
+        if (isCheck) checksDone++;
+        sec.items.push({ label: parts.join(' › '), value: v === true ? '' : v, kind: isCheck ? 'check' : 'text' });
+      }
+    });
+    var at = state.last || state.bookmark;
+    return {
+      name: user ? user.name : '', email: user ? user.email : '',
+      date: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      pct: Math.round(state.maxPct), done: doneCount(), total: TOTAL, checksDone: checksDone, checksTotal: checksTotal,
+      where: at ? label(at.idx) : '', bookmark: state.bookmark ? label(state.bookmark.idx) : '',
+      chapters: CHAPTERS.map(function (c, i) { return { num: c[1] === '·' ? '' : c[1], title: c[2], read: i <= state.maxIdx }; }),
+      sections: sections
+    };
+  }
+  function downloadAvance(btn) {
     closeMenu();
-    setTimeout(function () { window.print(); }, 50);
+    if (!canEdit()) { askLogin(); return; }
+    if (btn) btn.setAttribute('aria-busy', 'true');
+    flash('Preparando tu PDF…', 6000);
+    Promise.all([loadPdfLib(), toDataUrl('assets/logo-coral.png')]).then(function (r) {
+      var data = avanceData();
+      data.logo = r[1];
+      var doc = r[0](data);
+      var who = (user.name || 'alumno').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      doc.save('Mi-avance-guia-prompting-' + who + '.pdf');
+      flash('Listo. Tu PDF se descargó.');
+    }).catch(function () {
+      flash('No se pudo generar el PDF. Revisá la conexión y probá de nuevo.', 5000);
+    }).then(function () { if (btn) btn.removeAttribute('aria-busy'); });
   }
 
   // ---- Copiar prompts ----
@@ -478,7 +530,7 @@
     'toggle-drawer': function () { if (drawer.hidden) openDrawer(); else closeDrawer(); },
     'close-drawer': function () { closeDrawer(); },
     'mark': markHere,
-    'print': printPdf,
+    'pdf-avance': downloadAvance,
     'resume': function () {
       var a = state.bannerAction, t = state.bannerTarget;
       hideBanner();
@@ -514,7 +566,7 @@
   // Guardar lo pendiente al salir o al cambiar de pestaña / app
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && user) flush(); });
   window.addEventListener('pagehide', function () { if (user) flush(); });
-  window.addEventListener('beforeprint', function () { closeMenu(); });
+  window.addEventListener('beforeprint', function () { closeMenu(); closeDrawer(false); });
 
   // ---- Inicio ----
   buildFields();

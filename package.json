@@ -3,12 +3,15 @@
   "private": true,
   "description": "Guía práctica de prompting — sitio estático con login de Google (Firebase)",
   "scripts": {
-    "build": "esbuild src/backend.js --bundle --format=esm --minify --target=es2019 --outfile=site/js/backend.js",
-    "emulators": "firebase emulators:start --only auth,firestore --project demo-guia"
+    "build": "esbuild src/backend.js --bundle --format=esm --minify --target=es2019 --outfile=site/js/backend.js && esbuild src/pdf-avance.js --bundle --format=esm --minify --target=es2019 --external:html2canvas --external:dompurify --external:canvg --outfile=site/js/pdf-avance.js",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-guia",
+    "pdf": "node scripts/generar-pdf.js"
   },
   "devDependencies": {
     "esbuild": "0.25.10",
     "firebase": "11.10.0",
-    "firebase-tools": "14.19.1"
+    "firebase-tools": "14.19.1",
+    "jspdf": "^3.0.3",
+    "playwright": "^1.56.1"
   }
 }

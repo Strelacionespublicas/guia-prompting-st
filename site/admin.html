@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta name="robots" content="noindex"/>
+<title>Seguimiento de alumnos — Guía práctica de prompting</title>
+<meta content="#012C3D" name="theme-color"/>
+<link href="favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="css/tokens.css" rel="stylesheet"/>
+<link href="css/guia.css" rel="stylesheet"/>
+<link href="css/admin.css" rel="stylesheet"/>
+<script src="js/firebase-config.js"></script>
+<script type="module" src="js/backend.js"></script>
+<script defer src="js/admin.js"></script>
+</head>
+<body class="auth-pending">
+<header style="position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.96);border-bottom:1px solid #DDE1DB">
+<div class="adm-bar">
+<a aria-label="Ir a la guía" href="./" style="display:flex"><span class="st-logo"><img alt="ST Relaciones Públicas" height="32" src="assets/logo-petrol.png" style="height:32px"/><span class="st-logo__desc" style="font-size:11px;margin-top:3.84px">Relaciones Públicas</span></span></a>
+<div class="adm-bar__right">
+<span class="adm-who" id="who"></span>
+<button class="tool-btn" data-auth="in" id="logout" type="button">Cerrar sesión</button>
+</div>
+</div>
+</header>
+<main class="adm">
+<div class="adm-eyebrow">PANEL DE SEGUIMIENTO</div>
+<h1 class="adm-title">Avance de los alumnos</h1>
+
+<section class="adm-msg" id="msg-config" hidden>
+<p>Todavía no está conectado Firebase. Completá <code>js/firebase-config.js</code> para usar el panel.</p>
+</section>
+
+<section class="adm-msg" data-auth="out" id="msg-login">
+<p>Ingresá con la cuenta de Google que figura como administradora.</p>
+<button class="tool-btn google-btn google-btn--lg" id="login" type="button"><svg aria-hidden="true" class="g-icon" viewBox="0 0 48 48" width="18" height="18"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Ingresar con Google</button>
+</section>
+
+<section class="adm-msg" hidden id="msg-denied">
+<p>Esta cuenta no tiene permiso para ver el seguimiento. Si sos la docente, agregá tu email en <code>js/firebase-config.js</code> y en las reglas de Firestore.</p>
+</section>
+
+<section data-auth="in" hidden id="panel">
+<div class="adm-stats" id="stats"></div>
+<div class="adm-tools">
+<input aria-label="Buscar alumno" class="adm-search" id="search" placeholder="Buscar por nombre o email" type="search"/>
+<button class="tool-btn" id="refresh" type="button">Actualizar</button>
+<button class="st-btn st-btn--sm" id="csv" type="button">Descargar CSV</button>
+</div>
+<div class="adm-table-wrap">
+<table class="adm-table">
+<thead><tr><th>Alumno</th><th>Leído</th><th>Dónde está</th><th>Espacios completados</th><th>Última actividad</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p class="adm-empty" hidden id="empty">Todavía no ingresó ningún alumno.</p>
+</section>
+</main>
+
+<div class="adm-detail" hidden id="detail" role="dialog" aria-modal="true" aria-labelledby="detail-name">
+<div class="adm-detail__backdrop" data-close=""></div>
+<aside class="adm-detail__panel">
+<div class="adm-detail__head">
+<div><div class="adm-detail__name" id="detail-name"></div><div class="adm-detail__email" id="detail-email"></div></div>
+<button aria-label="Cerrar" class="adm-detail__close" data-close="" type="button">×</button>
+</div>
+<div class="adm-detail__body" id="detail-body"></div>
+</aside>
+</div>
+</body>
+</html>

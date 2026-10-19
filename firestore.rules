@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Cada alumno solo puede leer y escribir su propio documento (users/{su uid}).
+// Las cuentas de la lista de admins pueden leer todos, para el panel de seguimiento.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['tu-cuenta@gmail.com'];
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validDoc() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['profile', 'progress', 'fields', 'stats', 'createdAt', 'updatedAt'])
+        && (!('fields' in d) || (d.fields is map && d.fields.size() <= 1000))
+        && (!('profile' in d) || d.profile is map)
+        && (!('progress' in d) || d.progress is map)
+        && (!('stats' in d) || d.stats is map);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid) && validDoc();
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "guia-prompting-st",
+  "private": true,
+  "description": "Guía práctica de prompting — sitio estático con login de Google (Firebase)",
+  "scripts": {
+    "build": "esbuild src/backend.js --bundle --format=esm --minify --target=es2019 --outfile=site/js/backend.js",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-guia"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "firebase": "11.10.0",
+    "firebase-tools": "14.19.1"
+  }
+}

@@ -1,0 +1,23 @@
+// Configuración de Firebase (login con Google y guardado del avance).
+//
+// Mientras esto quede en null, la guía funciona igual pero sin login: el avance de
+// lectura se guarda solo en el navegador y los ejercicios no se pueden completar.
+//
+// Para activarlo: Firebase → Configuración del proyecto → Tus apps → App web →
+// copiá el objeto firebaseConfig y pegalo acá. Estos datos no son secretos: la
+// seguridad la dan las reglas de Firestore (archivo firestore.rules).
+window.GUIA_FIREBASE_CONFIG = null;
+/* Ejemplo:
+window.GUIA_FIREBASE_CONFIG = {
+  apiKey: "AIza...",
+  authDomain: "guia-prompting-st.firebaseapp.com",
+  projectId: "guia-prompting-st",
+  storageBucket: "guia-prompting-st.firebasestorage.app",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abc123"
+};
+*/
+
+// Cuentas de Google que pueden ver el panel de seguimiento (admin.html).
+// Tienen que coincidir con la lista de firestore.rules.
+window.GUIA_ADMINS = ['tu-cuenta@gmail.com'];

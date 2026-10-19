@@ -6,7 +6,14 @@
 // Para activarlo: Firebase → Configuración del proyecto → Tus apps → App web →
 // copiá el objeto firebaseConfig y pegalo acá. Estos datos no son secretos: la
 // seguridad la dan las reglas de Firestore (archivo firestore.rules).
-window.GUIA_FIREBASE_CONFIG = null;
+window.GUIA_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA4vTd9gRhoyNt9QdyE8Q_hRIM8N_Kq2Ro",
+  authDomain: "guia-de-prompting.firebaseapp.com",
+  projectId: "guia-de-prompting",
+  storageBucket: "guia-de-prompting.firebasestorage.app",
+  messagingSenderId: "654492079484",
+  appId: "1:654492079484:web:af400e0c2e6c822af300f9"
+};
 /* Ejemplo:
 window.GUIA_FIREBASE_CONFIG = {
   apiKey: "AIza...",
@@ -20,4 +27,4 @@ window.GUIA_FIREBASE_CONFIG = {
 
 // Cuentas de Google que pueden ver el panel de seguimiento (admin.html).
 // Tienen que coincidir con la lista de firestore.rules.
-window.GUIA_ADMINS = ['tu-cuenta@gmail.com'];
+window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];

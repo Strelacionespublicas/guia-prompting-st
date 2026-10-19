@@ -26,12 +26,42 @@ const footer = `<div style="width:100%;font:8px Helvetica,Arial,sans-serif;color
   <span>Guía práctica de prompting · ST Relaciones Públicas</span>
   <span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
 
+// Trae de Firestore las ediciones de la docente (lectura pública) para incluirlas en el PDF
+function fromFirestore(v) {
+  if (!v) return null;
+  if ('stringValue' in v) return v.stringValue;
+  if ('mapValue' in v) return Object.fromEntries(Object.entries(v.mapValue.fields || {}).map(([k, x]) => [k, fromFirestore(x)]));
+  if ('arrayValue' in v) return (v.arrayValue.values || []).map(fromFirestore);
+  return null;
+}
+async function loadContent() {
+  const cfg = fs.readFileSync(path.join(SITE, 'js', 'firebase-config.js'), 'utf8');
+  const project = (cfg.match(/projectId:\s*"([^"]+)"/) || [])[1];
+  const key = (cfg.match(/apiKey:\s*"([^"]+)"/) || [])[1];
+  if (!project) return null;
+  try {
+    const r = await fetch(`https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/content/guia?key=${key}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const doc = await r.json();
+    return fromFirestore({ mapValue: doc });
+  } catch (e) {
+    console.warn('No se pudieron traer las ediciones de Firestore (' + e.message + '). El PDF sale con el texto base.');
+    return null;
+  }
+}
+
 server.listen(0, async () => {
   const { port } = server.address();
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
     await page.goto(`http://localhost:${port}/`, { waitUntil: 'networkidle' });
+    const content = await loadContent();
+    if (content) {
+      await page.evaluate((c) => window.GuiaContent.apply(c), content);
+      console.log('Ediciones aplicadas:', Object.keys(content.blocks || {}).length, 'textos,', Object.keys(content.videos || {}).length, 'videos');
+    }
     await page.evaluate(() => document.fonts.ready);
     await page.emulateMedia({ media: 'print' });
     await page.pdf({

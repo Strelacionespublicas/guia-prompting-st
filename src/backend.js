@@ -59,6 +59,14 @@ const backend = {
     if (isNew) data.createdAt = serverTimestamp();
     return setDoc(userRef(uid), data, { merge: true });
   },
+  // Contenido editado por la docente (textos, videos y enlaces). Lo puede leer cualquiera.
+  async loadContent() {
+    const snap = await getDoc(doc(db, 'content', 'guia'));
+    return snap.exists() ? snap.data() : null;
+  },
+  saveContent(data, email) {
+    return setDoc(doc(db, 'content', 'guia'), { ...data, updatedBy: email || '', updatedAt: serverTimestamp() });
+  },
   async listUsers() {
     const snap = await getDocs(collection(db, 'users'));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));

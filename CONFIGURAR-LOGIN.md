@@ -49,3 +49,16 @@ Entrá a `https://tu-sitio.netlify.app/admin.html` con la cuenta docente. Vas a 
 - **Instagram, WhatsApp y otras apps:** Google no deja ingresar desde el navegador interno de esas apps. La guía lo detecta y le pide al alumno que la abra en Chrome o Safari, con un botón para copiar el enlace. Conviene avisarlo también cuando compartas el link.
 - **Datos personales:** se guarda nombre, email y foto de Google, y lo que cada alumno escribe en la guía. Cada alumno ve solo lo suyo y solo las cuentas docentes ven todo. Vale la pena mencionarlo en la presentación del curso.
 - **Si cambia el contenido de la guía:** las respuestas se guardan por casillero. Si se agregan o quitan tablas o ejercicios, hay que volver a marcar los campos con `scripts/marcar-campos.py`, y las respuestas viejas pueden quedar desfasadas. Conviene cerrar el contenido antes de abrir la inscripción.
+
+## Editar la guía desde la web
+
+Con la cuenta docente aparece **✎ Editar guía** en la barra de arriba. En el celular está en el menú de tu foto, y también se entra desde el panel de seguimiento.
+
+- Hacé clic en cualquier texto y escribí. **Enter** hace un salto de línea.
+- **N:** negrita. **Enlace:** seleccioná un texto con el mouse y pegá la dirección.
+- **＋ Video o enlace debajo:** hacé clic en un bloque y pegá el link. YouTube, Vimeo, Loom y Google Drive se muestran como reproductor; cualquier otro link aparece como tarjeta.
+- **＋ Cargar video:** está en cada una de las 7 cajas de "Video demostrativo".
+- **Texto original:** descarta las ediciones del bloque seleccionado.
+- **Guardar y publicar:** los alumnos ven los cambios al instante, sin volver a subir nada a Netlify.
+
+El PDF descargable de la guía no se actualiza solo con estas ediciones: hay que regenerarlo con `npm run pdf` (trae tus ediciones desde Firebase) y volver a subir la carpeta a Netlify.

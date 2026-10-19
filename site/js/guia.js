@@ -464,8 +464,34 @@
     backend.signOut().then(function () { flash('Cerraste sesión. Tus respuestas quedaron guardadas en tu cuenta.'); });
   }
 
+  function isAdmin(email) {
+    return (window.GUIA_ADMINS || []).some(function (a) { return a.toLowerCase() === String(email || '').toLowerCase(); });
+  }
+  function editing() { return body.classList.contains('edit-mode'); }
+  var editorLoading = null;
+  function startEditor() {
+    if (!user || !isAdmin(user.email)) return;
+    closeMenu();
+    closeDrawer(false);
+    if (editing()) return;
+    if (!editorLoading) {
+      editorLoading = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'js/editor.js';
+        s.onload = resolve;
+        s.onerror = function () { editorLoading = null; reject(); };
+        document.head.appendChild(s);
+      });
+    }
+    editorLoading.then(function () {
+      window.GuiaEditor.start({ backend: backend, user: user, flash: flash });
+    }, function () { flash('No se pudo abrir el editor. Revisá la conexión.'); });
+  }
+
   function onUser(u) {
     loaded = false;
+    body.classList.toggle('is-admin', !!(u && isAdmin(u.email)));
+    if (!u && editing() && window.GuiaEditor) window.GuiaEditor.stop();
     if (!u) {
       user = null;
       setAuthClass('auth-out');
@@ -494,6 +520,7 @@
       applyValues(data.fields);
       loaded = true;
       setEditable(true);
+      if (/[?&]editar=1/.test(location.search)) startEditor();
       renderDrawer();
       track();
       flush();
@@ -516,6 +543,8 @@
       backend = window.GuiaBackend;
       if (!backend || !backend.ready) { setAuthClass('auth-none'); return; }
       backend.onUser(onUser);
+      // Textos, videos y enlaces editados por la docente
+      backend.loadContent().then(function (c) { if (window.GuiaContent && !editing()) window.GuiaContent.load(c); }, function () {});
     };
     window.addEventListener('guia-backend', onReady, { once: true });
     var s = document.createElement('script');
@@ -540,7 +569,8 @@
     'login': function () { closeDrawer(false); login(); },
     'logout': logout,
     'account-menu': function () { if (menu.hidden) openMenu(); else closeMenu(); },
-    'copy': copyPrompt
+    'copy': copyPrompt,
+    'edit-guide': startEditor
   };
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-action]');

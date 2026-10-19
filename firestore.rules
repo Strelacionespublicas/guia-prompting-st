@@ -24,6 +24,16 @@ service cloud.firestore {
         && (!('stats' in d) || d.stats is map);
     }
 
+    // Contenido editable de la guía: lo leen todos, lo escribe solo la docente
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['blocks', 'videos', 'extras', 'updatedBy', 'updatedAt'])
+        && request.resource.data.blocks is map
+        && request.resource.data.videos is map
+        && request.resource.data.extras is map;
+    }
+
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid) && validDoc();

@@ -44,7 +44,7 @@ export function crearPdfAvance(d) {
 
   // ---- Indicadores ----
   const stats = [
-    [d.pct + ' %', 'de la guía leída'],
+    [d.finishedCount + ' de ' + d.finishedTotal, 'capítulos terminados'],
     [d.done + ' de ' + d.total, 'espacios completados'],
     [d.checksDone + ' de ' + d.checksTotal, 'casillas tildadas']
   ];

@@ -55,7 +55,12 @@
     for (var k in f) if (filled(f[k])) n++;
     return n;
   }
-  function pct(u) { return Math.round((u.progress && u.progress.maxPct) || 0); }
+  // % de capítulos que el alumno marcó como terminados
+  function pct(u) { return Math.round((u.progress && u.progress.pct) || 0); }
+  function finished(u) {
+    var p = u.progress || {};
+    return (p.finishedCount || 0) + ' de ' + (p.finishedTotal || 17);
+  }
   function name(u) { return (u.profile && u.profile.name) || (u.profile && u.profile.email) || 'Sin nombre'; }
 
   function renderStats() {
@@ -64,7 +69,7 @@
     var active = users.filter(function (u) { var d = lastActivity(u); return d && d.getTime() > week; }).length;
     var avgRead = users.length ? Math.round(users.reduce(function (a, u) { return a + pct(u); }, 0) / users.length) : 0;
     var avgDone = users.length ? Math.round(users.reduce(function (a, u) { return a + doneOf(u); }, 0) / users.length / total * 100) : 0;
-    var cards = [[users.length, 'alumnos registrados'], [active, 'activos en los últimos 7 días'], [avgRead + ' %', 'de la guía leída, en promedio'], [avgDone + ' %', 'de los espacios completados, en promedio']];
+    var cards = [[users.length, 'alumnos registrados'], [active, 'activos en los últimos 7 días'], [avgRead + ' %', 'de la guía terminada, en promedio'], [avgDone + ' %', 'de los espacios completados, en promedio']];
     $('stats').innerHTML = cards.map(function (c) {
       return '<div class="adm-stat"><div class="adm-stat__num">' + esc(c[0]) + '</div><div class="adm-stat__label">' + esc(c[1]) + '</div></div>';
     }).join('');
@@ -82,7 +87,7 @@
       var where = (u.progress && u.progress.where) || '—';
       return '<tr tabindex="0" data-id="' + esc(u.id) + '">' +
         '<td><div class="adm-name">' + esc(name(u)) + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
-        '<td><div class="adm-meter"><span style="width:' + p + '%"></span></div><span class="adm-num">' + p + ' %</span></td>' +
+        '<td><div class="adm-meter"><span style="width:' + p + '%"></span></div><span class="adm-num">' + finished(u) + '</span></td>' +
         '<td>' + esc(where) + '</td>' +
         '<td><span class="adm-num">' + done + '</span> de ' + total + '</td>' +
         '<td>' + esc(relTime(lastActivity(u))) + '</td></tr>';
@@ -103,7 +108,7 @@
       if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
       groups[g].push([parts.join(' › '), f[fid]]);
     });
-    var html = '<p class="adm-detail__meta">Leyó el ' + pct(u) + ' % · está en ' + esc((u.progress && u.progress.where) || '—') +
+    var html = '<p class="adm-detail__meta">Terminó ' + finished(u) + ' capítulos · está en ' + esc((u.progress && u.progress.where) || '—') +
       (u.progress && u.progress.bookmark ? '' : '') + ' · ' + doneOf(u) + ' espacios completados</p>';
     if (!groupOrder.length) html += '<p class="adm-empty">Todavía no completó ningún espacio.</p>';
     groupOrder.forEach(function (g) {
@@ -121,7 +126,7 @@
 
   function csv() {
     var cell = function (v) { v = v === true ? 'Sí' : v === false || v == null ? '' : String(v); return '"' + v.replace(/"/g, '""') + '"'; };
-    var head = ['Nombre', 'Email', '% leído', 'Dónde está', 'Espacios completados', 'Última actividad'].concat(order.map(function (id) { return labels[id]; }));
+    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad'].concat(order.map(function (id) { return labels[id]; }));
     var lines = [head.map(cell).join(',')];
     users.forEach(function (u) {
       var d = lastActivity(u), f = u.fields || {};

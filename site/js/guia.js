@@ -28,7 +28,9 @@
   var menuBtn = document.querySelector('[data-action="account-menu"]');
   var sections = CHAPTERS.map(function (c) { return $(c[0]); });
 
-  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, bannerTarget: null };
+  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, bannerTarget: null };
+  // Capítulos y anexos que se marcan como terminados (todo menos el índice)
+  var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice'; });
   var flashTimer = null, raf = null, lastFocus = null;
 
   // ---- Almacenamiento local ----
@@ -83,11 +85,11 @@
       var mark = a.children[2];
       a.classList.toggle('is-current', i === state.current);
       if (i === state.current) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-      mark.textContent = i === bm ? '⚑' : (i <= state.maxIdx ? '✓' : '');
+      mark.textContent = i === bm ? '⚑' : (state.finished[CHAPTERS[i][0]] ? '✓' : '');
       mark.classList.toggle('is-bookmark', i === bm);
     });
-    $('progress-max').style.width = state.maxPct.toFixed(1) + '%';
-    $('progress-label').textContent = Math.round(state.maxPct) + ' % leído';
+    $('progress-max').style.width = finishedPct().toFixed(1) + '%';
+    $('progress-label').textContent = finishedCount() + ' de ' + FINISHABLE.length + ' terminados';
     $('bookmark-text').textContent = state.bookmark
       ? 'Tu marca: ' + label(state.bookmark.idx)
       : 'Usá “Marcar hasta acá” para guardar dónde quedaste.';
@@ -146,6 +148,75 @@
     }
   }
 
+  // ---- Capítulos terminados (los marca el alumno; el scroll no cuenta) ----
+  function finishedCount() {
+    return FINISHABLE.filter(function (c) { return state.finished[c[0]]; }).length;
+  }
+  function finishedPct() { return finishedCount() / FINISHABLE.length * 100; }
+  function chapterFields(id) {
+    var n = 0, d = 0;
+    Object.keys(fields).forEach(function (f) {
+      if (f.indexOf(id + '-') !== 0) return;
+      n++;
+      var v = values[f];
+      if (v === true || (typeof v === 'string' && v.trim())) d++;
+    });
+    return { total: n, done: d };
+  }
+  function shortLabel(i) {
+    var c = CHAPTERS[i];
+    return /\d/.test(c[1]) ? 'Capítulo ' + Number(c[1]) : (c[1] !== '·' ? 'Anexo ' + c[1] : c[2]);
+  }
+  function buildFinishCards() {
+    CHAPTERS.forEach(function (c, i) {
+      var sec = sections[i];
+      if (!sec || c[0] === 'indice') return;
+      var card = document.createElement('div');
+      card.className = 'finish';
+      card.setAttribute('data-noprint', '');
+      card.setAttribute('data-finish', c[0]);
+      card.innerHTML = '<span class="finish__icon" aria-hidden="true">✓</span>' +
+        '<div class="finish__text"><strong></strong><span class="finish__sub"></span></div>' +
+        '<button type="button" class="finish__btn" data-action="finish"></button>';
+      card.querySelector('button').setAttribute('data-ref', c[0]);
+      sec.appendChild(card);
+    });
+    renderFinish();
+  }
+  function renderFinish() {
+    $$('[data-finish]').forEach(function (card) {
+      var id = card.getAttribute('data-finish'), i = CHAPTERS.map(function (c) { return c[0]; }).indexOf(id);
+      var f = chapterFields(id), done = state.finished[id], name = shortLabel(i);
+      var reading = f.total === 0;
+      card.classList.toggle('is-done', !!done);
+      card.querySelector('strong').textContent = done
+        ? (reading ? 'Lectura finalizada' : name + ' completado')
+        : (reading ? '¿Terminaste de leer esta sección?' : '¿Terminaste ' + (name.indexOf('Anexo') === 0 ? 'este anexo' : 'este capítulo') + '?');
+      var sub = done ? 'Lo marcaste el ' + new Date(done).toLocaleDateString('es-AR') + '.' : '';
+      if (!reading) sub = 'Completaste ' + f.done + ' de ' + f.total + ' espacios de ejercicios. ' + sub;
+      else if (!done) sub = 'Marcala para llevar la cuenta de tu avance.';
+      card.querySelector('.finish__sub').textContent = sub.trim();
+      var btn = card.querySelector('button');
+      btn.textContent = done ? 'Desmarcar' : (reading ? '✓ Marcar lectura finalizada' : '✓ Marcar como completado');
+      btn.setAttribute('aria-pressed', done ? 'true' : 'false');
+    });
+  }
+  function toggleFinish(btn) {
+    var id = btn.getAttribute('data-ref');
+    if (state.finished[id]) delete state.finished[id];
+    else state.finished[id] = Date.now();
+    save({ finished: state.finished });
+    renderFinish();
+    renderDrawer();
+    if (!state.finished[id]) { flash('Desmarcado.'); return; }
+    var ids = CHAPTERS.map(function (c) { return c[0]; }), i = ids.indexOf(id);
+    var next = -1;
+    for (var j = i + 1; j < CHAPTERS.length; j++) if (!state.finished[CHAPTERS[j][0]]) { next = j; break; }
+    var msg = '¡Bien! Llevás ' + finishedCount() + ' de ' + FINISHABLE.length + ' terminados.';
+    if (next >= 0) showBanner(msg, { idx: next, delta: 0 }, 'Seguir con ' + shortLabel(next));
+    else flash(finishedCount() === FINISHABLE.length ? '¡Terminaste toda la guía! 🎉' : msg, 4500);
+  }
+
   function markHere() {
     var idx = currentIndex();
     if (idx < 0) { flash('Empezá a leer y después marcá hasta dónde llegaste.'); return; }
@@ -190,9 +261,9 @@
     return {
       name: user ? user.name : '', email: user ? user.email : '',
       date: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      pct: Math.round(state.maxPct), done: doneCount(), total: TOTAL, checksDone: checksDone, checksTotal: checksTotal,
+      pct: Math.round(finishedPct()), finishedCount: finishedCount(), finishedTotal: FINISHABLE.length, done: doneCount(), total: TOTAL, checksDone: checksDone, checksTotal: checksTotal,
       where: at ? label(at.idx) : '', bookmark: state.bookmark ? label(state.bookmark.idx) : '',
-      chapters: CHAPTERS.map(function (c, i) { return { num: c[1] === '·' ? '' : c[1], title: c[2], read: i <= state.maxIdx }; }),
+      chapters: FINISHABLE.map(function (c) { return { num: c[1] === '·' ? '' : c[1], title: c[2], read: !!state.finished[c[0]] }; }),
       sections: sections
     };
   }
@@ -338,6 +409,7 @@
   function updateCounts() {
     var n = doneCount();
     $$('.js-done-count').forEach(function (el) { el.textContent = n; });
+    renderFinish();
   }
 
   var askedAt = 0;
@@ -383,7 +455,8 @@
   }
 
   function progressPatch() {
-    var p = { maxIdx: state.maxIdx, maxPct: Math.round(state.maxPct * 10) / 10 };
+    var p = { maxIdx: state.maxIdx, maxPct: Math.round(state.maxPct * 10) / 10,
+      finished: state.finished, pct: Math.round(finishedPct()), finishedCount: finishedCount(), finishedTotal: FINISHABLE.length };
     if (state.bookmark) p.bookmark = state.bookmark;
     if (state.last) p.last = state.last;
     var at = state.last || state.bookmark;
@@ -400,7 +473,7 @@
     pending = {};
     var patch = {
       progress: progressPatch(),
-      stats: { done: doneCount(), total: TOTAL, maxPct: Math.round(state.maxPct), at: Date.now() },
+      stats: { done: doneCount(), total: TOTAL, pct: Math.round(finishedPct()), at: Date.now() },
       profile: { name: user.name, email: user.email, photo: user.photo }
     };
     if (Object.keys(f).length) patch.fields = f;
@@ -429,7 +502,9 @@
     if (typeof remote.maxPct === 'number') state.maxPct = Math.max(state.maxPct, remote.maxPct);
     if (remote.bookmark && (!state.bookmark || (remote.bookmark.at || 0) > (state.bookmark.at || 0))) state.bookmark = remote.bookmark;
     if (!state.last && remote.last) state.last = remote.last;
-    var local = { maxIdx: state.maxIdx, maxPct: state.maxPct };
+    var rf = remote.finished || {};
+    for (var id in rf) if (!state.finished[id]) state.finished[id] = rf[id];
+    var local = { maxIdx: state.maxIdx, maxPct: state.maxPct, finished: state.finished };
     if (state.bookmark) local.bookmark = state.bookmark;
     if (state.last) local.last = state.last;
     var saved = load();
@@ -518,6 +593,7 @@
       var hadBookmark = state.bookmark;
       mergeProgress(data.progress);
       applyValues(data.fields);
+      renderFinish();
       loaded = true;
       setEditable(true);
       if (/[?&]editar=1/.test(location.search)) startEditor();
@@ -570,7 +646,8 @@
     'logout': logout,
     'account-menu': function () { if (menu.hidden) openMenu(); else closeMenu(); },
     'copy': copyPrompt,
-    'edit-guide': startEditor
+    'edit-guide': startEditor,
+    'finish': toggleFinish
   };
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-action]');
@@ -606,6 +683,8 @@
   state.maxPct = saved.maxPct || 0;
   state.bookmark = saved.bookmark || null;
   state.last = saved.last || null;
+  state.finished = saved.finished || {};
+  buildFinishCards();
   var resumeFrom = saved.bookmark || saved.last;
   if (resumeFrom && resumeFrom.idx > 0 && !location.hash) {
     showBanner((saved.bookmark ? 'Marcaste hasta: ' : 'La última vez llegaste a: ') + label(resumeFrom.idx), resumeFrom);

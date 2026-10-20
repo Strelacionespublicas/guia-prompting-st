@@ -153,13 +153,19 @@ body:not(.edit-mode) .edit-only{display:none!important}
 .edit-mode [data-edit]:hover{outline-color:#78BDC4}
 .edit-mode [data-edit]:focus,.edit-mode [data-edit].is-active{outline:2px solid #F8444F;background-color:rgba(248,68,79,0.04)}
 .edit-mode [data-edit][data-locked]{cursor:default}
-.edit-mode{padding-bottom:120px}
+.edit-mode{padding-bottom:200px}
+.edit-mode #banner{bottom:auto!important;top:84px;z-index:61!important}
 .edit-only{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1.5px dashed #F8444F;border-radius:8px;background:#fff;color:#D32B36;font:600 13px/1 Inter,sans-serif;cursor:pointer}
 .video-edit{margin-top:12px}
-.ed-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:35;width:min(1100px,calc(100% - 24px));box-sizing:border-box;background:#012C3D;color:#fff;border-radius:14px;box-shadow:var(--shadow-lg);padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font:500 13px/1.3 Inter,sans-serif}
-.ed-bar__info{display:flex;flex-direction:column;min-width:0;flex:1 1 180px}
+.ed-bar{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:60;width:min(1100px,calc(100% - 24px));box-sizing:border-box;background:#012C3D;color:#fff;border-radius:14px;box-shadow:var(--shadow-lg);padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font:500 13px/1.3 Inter,sans-serif}
+.ed-bar.is-moved{transform:none;bottom:auto}
+.ed-grip{flex:none;align-self:stretch;display:flex;align-items:center;padding:0 4px;margin:-4px 0;font-size:20px;line-height:1;color:#A7D5DA;cursor:grab;touch-action:none;user-select:none;border-radius:6px}
+.ed-grip:hover{background:rgba(255,255,255,0.1)}
+.ed-grip:active{cursor:grabbing}
+.ed-bar__info{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 200px}
+.ed-jump{max-width:100%;height:28px;border:1px solid rgba(255,255,255,0.3);border-radius:6px;background:#073F53;color:#fff;font:600 13px/1 Inter,sans-serif;padding:0 6px;cursor:pointer}
 .ed-bar__info strong{color:#FB8990;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
-.ed-where{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#DCEEF0}
+.ed-where{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#A7D5DA;font-size:12px}
 .ed-bar__tools,.ed-bar__save{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ed-bar button{height:34px;padding:0 12px;border:1px solid rgba(255,255,255,0.3);border-radius:8px;background:transparent;color:#fff;font:600 13px/1 Inter,sans-serif;cursor:pointer}
 .ed-bar button:hover{background:rgba(255,255,255,0.1)}

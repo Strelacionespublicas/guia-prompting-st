@@ -55,6 +55,8 @@
     active = el;
     el.classList.add('is-active');
     bar.querySelector('.ed-where').textContent = describe(el);
+    var sec = el.closest('section[id]');
+    if (sec) bar.querySelector('.ed-jump').value = sec.id;
   }
   function describe(el) {
     var t = (el.textContent || '').replace(/\s+/g, ' ').trim();
@@ -196,6 +198,62 @@
   }
   function warn(e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } }
 
+  // ---- Secciones: saber dónde estás y saltar a otra ----
+  function sectionOptions() {
+    return Array.prototype.map.call(document.querySelectorAll('section[id]'), function (sec) {
+      var h = sec.querySelector('h1, h2'), eyebrow = sec.querySelector('h2') && sec.querySelector('h2').previousElementSibling;
+      var t = (h ? h.textContent : sec.id).replace(/\s+/g, ' ').trim();
+      var pre = eyebrow && /CAPÍTULO|ANEXO/.test(eyebrow.textContent) ? eyebrow.textContent.split('·')[0].trim().replace('CAPÍTULO', 'Cap.').replace('ANEXO', 'Anexo') + ' · ' : '';
+      return '<option value="' + sec.id + '">' + (pre + t).replace(/</g, '&lt;') + '</option>';
+    }).join('');
+  }
+  function currentSection() {
+    var cur = null;
+    Array.prototype.forEach.call(document.querySelectorAll('section[id]'), function (sec) { if (sec.getBoundingClientRect().top <= 140) cur = sec; });
+    return cur;
+  }
+  function syncSection() {
+    var sec = currentSection(), sel = bar && bar.querySelector('.ed-jump');
+    if (sec && sel && document.activeElement !== sel) sel.value = sec.id;
+  }
+
+  // ---- Barra movible (la posición se recuerda en este navegador) ----
+  var POS_KEY = 'guia-prompting-st:barra-edicion';
+  function placeBar(pos) {
+    if (!pos) { bar.style.left = bar.style.top = ''; bar.classList.remove('is-moved'); return; }
+    var r = bar.getBoundingClientRect();
+    var x = Math.min(Math.max(8, pos.x), window.innerWidth - r.width - 8);
+    var y = Math.min(Math.max(8, pos.y), window.innerHeight - r.height - 8);
+    bar.classList.add('is-moved');
+    bar.style.left = x + 'px';
+    bar.style.top = y + 'px';
+  }
+  function makeDraggable() {
+    var grip = bar.querySelector('.ed-grip'), start = null;
+    grip.addEventListener('pointerdown', function (e) {
+      var r = bar.getBoundingClientRect();
+      start = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+      grip.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (start) placeBar({ x: e.clientX - start.dx, y: e.clientY - start.dy });
+    });
+    grip.addEventListener('pointerup', function () {
+      if (!start) return;
+      start = null;
+      try { localStorage.setItem(POS_KEY, JSON.stringify({ x: parseFloat(bar.style.left), y: parseFloat(bar.style.top) })); } catch (e) {}
+    });
+    grip.addEventListener('dblclick', function () {
+      placeBar(null);
+      try { localStorage.removeItem(POS_KEY); } catch (e) {}
+    });
+    window.addEventListener('resize', function () { if (bar.classList.contains('is-moved')) placeBar({ x: parseFloat(bar.style.left), y: parseFloat(bar.style.top) }); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null'); } catch (e) {}
+    if (saved) requestAnimationFrame(function () { placeBar(saved); });
+  }
+
   function build() {
     bar = document.createElement('div');
     bar.className = 'ed-bar';
@@ -203,7 +261,9 @@
     bar.setAttribute('role', 'toolbar');
     bar.setAttribute('aria-label', 'Edición de la guía');
     bar.innerHTML =
-      '<div class="ed-bar__info"><strong>Modo edición</strong><span class="ed-where">Hacé clic en un texto para editarlo</span></div>' +
+      '<span class="ed-grip" title="Arrastrá para mover la barra · doble clic para volver a su lugar" aria-hidden="true">⠿</span>' +
+      '<div class="ed-bar__info"><strong>Modo edición</strong><select class="ed-jump" aria-label="Ir a una sección">' + sectionOptions() + '</select>' +
+      '<span class="ed-where">Hacé clic en un texto para editarlo</span></div>' +
       '<div class="ed-bar__tools">' +
       '<button type="button" data-ed="bold" title="Negrita (Ctrl+B)"><b>N</b></button>' +
       '<button type="button" data-ed="link">Enlace</button>' +
@@ -214,6 +274,13 @@
       '<button type="button" class="ed-primary" data-ed="save" disabled>Guardar y publicar</button>' +
       '<button type="button" data-ed="exit">Salir</button></div>';
     document.body.appendChild(bar);
+    makeDraggable();
+    bar.querySelector('.ed-jump').addEventListener('change', function (e) {
+      var sec = document.getElementById(e.target.value);
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    var t = null;
+    window.addEventListener('scroll', function () { if (!t) t = setTimeout(function () { t = null; syncSection(); }, 150); }, { passive: true });
     // mousedown en la barra no debe quitar la selección del texto
     bar.addEventListener('mousedown', function (e) { if (e.target.closest('button')) { keepSelection(); e.preventDefault(); } });
     bar.addEventListener('click', function (e) {
@@ -258,6 +325,7 @@
       document.addEventListener('click', onClick, true);
       window.addEventListener('beforeunload', warn);
       bar.hidden = false;
+      syncSection();
       setDirty(false);
       api.flash('Modo edición: hacé clic en cualquier texto para cambiarlo.', 4000);
     },

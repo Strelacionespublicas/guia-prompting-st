@@ -33,7 +33,7 @@ window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];
 window.GUIA_CERTIFICADO = {
   firma: 'Stella Torres',
   cargo: 'CEO & Founder de ST Relaciones Públicas® SAS',
-  lugar: 'Buenos Aires, Argentina',
+  lugar: 'Argentina',
   razonSocial: 'ST Relaciones Públicas SAS',
   // Dirección oficial de la guía: la usan el enlace de verificación y LinkedIn
   dominio: 'https://guia.strelacionespublicas.com.ar/',

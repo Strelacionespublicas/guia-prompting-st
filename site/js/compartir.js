@@ -124,9 +124,9 @@
     // Firma y fecha
     if (assets.firma && d.withSignature !== false) {
       // La firma conserva sus proporciones y apoya sobre la línea (la cruza apenas, como una firma real)
-      var f = assets.firma;
-      if (f.width / f.height < 2) ctx.drawImage(f, 432, 578, 290, 106); // firma manuscrita escaneada: así está en el modelo
-      else { var k = Math.min(300 / f.width, 104 / f.height); ctx.drawImage(f, 428, 686 - f.height * k, f.width * k, f.height * k); }
+      // Conserva sus proporciones, centrada sobre la línea y apoyada en ella (la cruza apenas, como una firma real)
+      var f = assets.firma, k = Math.min(300 / f.width, 150 / f.height), fw = f.width * k, fh = f.height * k;
+      ctx.drawImage(f, X + (311 - fw) / 2, 684 - fh, fw, fh);
     }
     ctx.fillStyle = PETROL;
     ctx.fillRect(X, 673, 311, 1.2);

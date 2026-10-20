@@ -254,7 +254,33 @@
   }
 
   // ---- LinkedIn y verificación pública del certificado ----
-  function verifyUrl(code) { return new URL('verificar.html?c=' + encodeURIComponent(code), location.href).href.split('#')[0]; }
+  function siteBase() { return (window.GUIA_CERTIFICADO && window.GUIA_CERTIFICADO.dominio) || new URL('./', location.href).href; }
+  function verifyUrl(code) { return new URL('verificar.html?c=' + encodeURIComponent(code), siteBase()).href; }
+  // Datos que se imprimen en el certificado (PDF e imagen para LinkedIn)
+  function certData() {
+    var c = state.certificate, conf = window.GUIA_CERTIFICADO || {}, d = new Date(c.at);
+    return {
+      name: c.name, code: c.code,
+      date: d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      place: conf.lugar || 'Argentina',
+      signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || '',
+      verifyLabel: new URL(siteBase()).host + '/verificar',
+      copyright: '© ' + d.getFullYear() + ' ' + (conf.razonSocial || 'ST Relaciones Públicas'),
+      withSignature: true
+    };
+  }
+  function loadShare() {
+    if (!shareLoading) {
+      shareLoading = new Promise(function (resolve, reject) {
+        var sc = document.createElement('script');
+        sc.src = 'js/compartir.js';
+        sc.onload = resolve;
+        sc.onerror = function () { shareLoading = null; reject(); };
+        document.head.appendChild(sc);
+      });
+    }
+    return shareLoading;
+  }
   function linkedinUrl() {
     var c = state.certificate;
     if (!c || !c.registered) return '';
@@ -286,22 +312,8 @@
     copyText(postText()).catch(function () {});
     // Se abre LinkedIn enseguida (si no, el navegador bloquea la ventana) y la imagen se descarga acá
     window.open('https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(postText()), '_blank', 'noopener');
-    if (!shareLoading) {
-      shareLoading = new Promise(function (resolve, reject) {
-        var sc = document.createElement('script');
-        sc.src = 'js/compartir.js';
-        sc.onload = resolve;
-        sc.onerror = function () { shareLoading = null; reject(); };
-        document.head.appendChild(sc);
-      });
-    }
-    var conf = window.GUIA_CERTIFICADO || {};
-    shareLoading.then(function () {
-      return window.GuiaCompartir.imagen({
-        name: c.name, code: c.code, detail: FINISHABLE.length + ' capítulos y anexos completados',
-        signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || '',
-        date: new Date(c.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
-      });
+    loadShare().then(function () {
+      return window.GuiaCompartir.imagen(certData());
     }).then(function (blob) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -373,16 +385,12 @@
       state.certificate = { name: name, code: c.code || newCode(), at: c.at || Date.now(), registered: !!(c.registered && c.name === name) };
       save({ certificate: state.certificate });
       flash('Preparando tu certificado…', 6000);
-      var conf = window.GUIA_CERTIFICADO || {};
       var reg = state.certificate.registered ? Promise.resolve() : registerCertificate().catch(function () { /* sin verificación pública */ });
-      Promise.all([loadPdfLib(), toDataUrl('assets/logo-coral.png'), reg]).then(function (r) {
-        var doc = window.GuiaPdfCertificado({
-          name: name, logo: r[1], code: state.certificate.code,
-          date: new Date(state.certificate.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }),
-          detail: FINISHABLE.length + ' capítulos y anexos completados',
-          signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || '',
-          verify: state.certificate.registered ? verifyUrl(state.certificate.code) : ''
-        });
+      Promise.all([loadPdfLib(), loadShare(), reg]).then(function () {
+        return window.GuiaCompartir.canvas(certData(), 3);
+      }).then(function (canvas) {
+        var doc = window.GuiaPdfCertificado(canvas, state.certificate.registered ? verifyUrl(state.certificate.code) : '',
+          'Certificado de finalización · ' + name);
         var who = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
         doc.save('Certificado-guia-prompting-' + who + '.pdf');
         renderCert();

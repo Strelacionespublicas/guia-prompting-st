@@ -33,6 +33,10 @@ window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];
 window.GUIA_CERTIFICADO = {
   firma: 'Stella Torres',
   cargo: 'Docente · ST Relaciones Públicas',
+  lugar: 'Buenos Aires, Argentina',
+  razonSocial: 'ST Relaciones Públicas SAS',
+  // Dirección oficial de la guía: la usan el enlace de verificación y LinkedIn
+  dominio: 'https://guia.strelacionespublicas.com.ar/',
   // Cómo aparece en LinkedIn ("Licencias y certificaciones")
   titulo: 'Guía práctica de prompting · Curso Claude y Codex',
   organizacion: 'ST Relaciones Públicas',

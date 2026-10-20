@@ -4,8 +4,8 @@
 
 Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, ingresan con Google, completan los ejercicios y marcan los capítulos terminados. La docente sigue el avance de cada alumno y puede editar textos, videos y enlaces desde la misma página.
 
-- **Sitio:** https://guia-prompting-st.netlify.app
-- **Panel de seguimiento:** https://guia-prompting-st.netlify.app/admin.html
+- **Sitio:** https://guia.strelacionespublicas.com.ar (también responde en guia-prompting-st.netlify.app)
+- **Panel de seguimiento:** https://guia.strelacionespublicas.com.ar/admin.html
 - **Firebase:** proyecto `guia-de-prompting` (login con Google y base de datos Firestore)
 
 ## Qué hay en cada carpeta

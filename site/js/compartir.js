@@ -122,7 +122,12 @@
     text(ctx, 'digitales con Claude y Codex, aunque no seas programador.', X, 401, fBody, TEXT);
 
     // Firma y fecha
-    if (assets.firma && d.withSignature !== false) ctx.drawImage(assets.firma, 432, 578, 290, 106);
+    if (assets.firma && d.withSignature !== false) {
+      // La firma conserva sus proporciones y apoya sobre la línea (la cruza apenas, como una firma real)
+      var f = assets.firma;
+      if (f.width / f.height < 2) ctx.drawImage(f, 432, 578, 290, 106); // firma manuscrita escaneada: así está en el modelo
+      else { var k = Math.min(300 / f.width, 104 / f.height); ctx.drawImage(f, 428, 686 - f.height * k, f.width * k, f.height * k); }
+    }
     ctx.fillStyle = PETROL;
     ctx.fillRect(X, 673, 311, 1.2);
     ctx.fillRect(784, 673, R - 784, 1.2);

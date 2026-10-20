@@ -149,7 +149,7 @@
   function editVideo(vid) {
     var v = draft.videos[vid];
     ask({ title: 'Video demostrativo ' + vid.replace('video', ''), url: v && v.url, removable: !!v,
-      hint: 'Pegá el enlace de YouTube, Vimeo, Loom o Google Drive (compartido como "Cualquier persona con el enlace").' }).then(function (r) {
+      hint: 'Pegá el enlace de YouTube, Vimeo, Loom o Google Drive (compartido como "Cualquier persona con el enlace"). Para que arranque en un minuto, en YouTube usá Compartir → "Empezar en" (o agregá &end=9:30 para que corte ahí).' }).then(function (r) {
       if (!r) return;
       if (r.remove) delete draft.videos[vid];
       else draft.videos[vid] = { url: r.url };

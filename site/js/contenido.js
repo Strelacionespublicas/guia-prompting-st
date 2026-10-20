@@ -46,11 +46,34 @@
     return tpl.innerHTML.replace(/(<br>)+$/, '');
   }
 
-  // Convierte enlaces de YouTube, Vimeo, Loom y Google Drive en reproductores
+  // Minuto de un enlace: "245", "4m5s", "1h2m3s" o "4:05" → segundos
+  function seconds(v) {
+    if (!v) return 0;
+    v = decodeURIComponent(v);
+    if (/^\d+$/.test(v)) return +v;
+    if (/^\d+(:\d{1,2}){1,2}$/.test(v)) return v.split(':').reduce(function (a, b) { return a * 60 + +b; }, 0);
+    var m = v.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i);
+    return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0;
+  }
+  function param(url, names) {
+    for (var i = 0; i < names.length; i++) {
+      var m = url.match(new RegExp('[?&#]' + names[i] + '=([^&#]+)', 'i'));
+      if (m) return seconds(m[1]);
+    }
+    return 0;
+  }
+  // Convierte enlaces de YouTube, Vimeo, Loom y Google Drive en reproductores.
+  // Un mismo video largo sirve para varios capítulos: el enlace puede traer el minuto de inicio
+  // (?t=4m05s, como lo copia YouTube en "Compartir → Empezar en") y, si se quiere, el de fin (&end=9:10).
   function embedOf(url) {
-    var m;
-    if ((m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/i))) return { src: 'https://www.youtube-nocookie.com/embed/' + m[1], name: 'YouTube' };
-    if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) return { src: 'https://player.vimeo.com/video/' + m[1], name: 'Vimeo' };
+    var m, start = param(url, ['t', 'start']), end = param(url, ['end']);
+    if ((m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/i))) {
+      var q = [];
+      if (start) q.push('start=' + start);
+      if (end > start) q.push('end=' + end);
+      return { src: 'https://www.youtube-nocookie.com/embed/' + m[1] + (q.length ? '?' + q.join('&') : ''), name: 'YouTube' };
+    }
+    if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) return { src: 'https://player.vimeo.com/video/' + m[1] + (start ? '#t=' + start + 's' : ''), name: 'Vimeo' };
     if ((m = url.match(/loom\.com\/(?:share|embed)\/([\w]+)/i))) return { src: 'https://www.loom.com/embed/' + m[1], name: 'Loom' };
     if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/i))) return { src: 'https://drive.google.com/file/d/' + m[1] + '/preview', name: 'Google Drive' };
     return null;

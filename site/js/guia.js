@@ -227,11 +227,28 @@
       ? (user ? 'Descargalo con tu nombre, la fecha y un código único.' : 'Ingresá con Google para descargarlo con tu nombre.')
       : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + '.';
     card.querySelector('button').hidden = !ready;
+    renderHeroCert(ready, left);
     var li = linkedinUrl();
     $$('[data-linkedin]').forEach(function (a) {
       a.hidden = !(ready && li);
       if (li) a.href = li;
     });
+  }
+
+  // Tarjeta del certificado en la portada: motiva desde el inicio y, al terminar, da acceso directo
+  function renderHeroCert(ready, left) {
+    if (!$('hero-cert')) return;
+    var total = FINISHABLE.length, done = total - left;
+    $('hero-cert').classList.toggle('is-ready', ready);
+    $('hero-cert-name').textContent = (state.certificate && state.certificate.name) || (user && user.name) || 'Tu nombre';
+    $('hero-cert-title').textContent = ready ? '¡Tu certificado está listo!' : 'Obtené tu certificado';
+    $('hero-cert-sub').textContent = ready
+      ? (user ? 'Descargalo y sumalo a tu perfil de LinkedIn.' : 'Ingresá con Google para descargarlo con tu nombre.')
+      : 'Completá los ' + total + ' capítulos y sumalo a tu perfil de LinkedIn.';
+    $('hero-cert-progress').hidden = ready;
+    $('hero-cert-bar').style.width = (done / total * 100) + '%';
+    $('hero-cert-count').textContent = done + ' de ' + total + ' capítulos';
+    $('hero-cert-actions').hidden = !ready;
   }
 
   // ---- LinkedIn y verificación pública del certificado ----

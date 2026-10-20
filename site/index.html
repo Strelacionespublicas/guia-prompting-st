@@ -52,7 +52,7 @@
 <button aria-label="Cerrar aviso" data-action="dismiss-banner" style="height:36px;padding:0 10px;border:1px solid rgba(255,255,255,0.3);border-radius:8px;background:transparent;color:#fff;font:600 14px/1 Inter,sans-serif;cursor:pointer" type="button">Cerrar</button>
 </div>
 <section data-screen-label="Portada" id="portada" style="background:#F7F8F3;border-bottom:1px solid #DDE1DB">
-<div style="max-width:1200px;margin:0 auto;padding:clamp(48px,9vw,112px) clamp(18px,5vw,48px) clamp(40px,6vw,72px)">
+<div class="hero" style="max-width:1200px;margin:0 auto;padding:clamp(48px,9vw,112px) clamp(18px,5vw,48px) clamp(40px,6vw,72px)">
 <div data-edit="portada-e1" style="font:600 13px/1.3 Inter,sans-serif;letter-spacing:.14em;color:#D32B36">CUADERNO DE TRABAJO · CURSO CLAUDE Y CODEX</div>
 <h1 data-edit="portada-e2" style="font-size:clamp(40px,8vw,88px);font-weight:800;letter-spacing:-.02em;line-height:1.02;margin-top:18px">GUÍA PRÁCTICA<br/>DE PROMPTING</h1>
 <p data-edit="portada-e3" style="font:500 clamp(19px,2.6vw,26px)/1.35 Inter,sans-serif;color:#14566D;margin-top:24px;max-width:680px">Cómo crear herramientas digitales con Claude y Codex, aunque no seas programador.</p>
@@ -60,6 +60,28 @@
 <p data-edit="portada-e4" style="font-size:clamp(16px,2vw,19px);max-width:600px">De una idea a una herramienta propia, con instrucciones claras, contexto y un método de trabajo.</p>
 <div data-noprint="" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px"><a class="st-btn st-btn--lg" download="Guia-practica-de-prompting.pdf" href="guia-practica-de-prompting.pdf">Descargar PDF</a><a href="#como-usar" style="display:inline-flex;align-items:center;height:48px;padding:0 22px;border:1.5px solid #012C3D;border-radius:8px;font:600 15px/1 Inter,sans-serif;color:#012C3D">Empezar a leer</a><button class="tool-btn google-btn google-btn--lg" data-action="login" data-auth="out" type="button"><svg aria-hidden="true" class="g-icon" height="18" viewbox="0 0 48 48" width="18"><path d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" fill="#EA4335"></path><path d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" fill="#4285F4"></path><path d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" fill="#FBBC05"></path><path d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" fill="#34A853"></path></svg>Ingresar con Google</button></div>
 <p class="cover-hint" data-auth="out" data-noprint="">Ingresá con tu cuenta de Google para completar los ejercicios y guardar tu avance. Lo retomás desde la compu o el celular.</p><p class="cover-hint" data-auth="in" data-noprint="">Hola, <strong class="js-first-name"></strong>. Tus respuestas y tu avance se guardan solos en tu cuenta. <button class="link-btn" data-action="pdf-avance" type="button">Descargar mi avance en PDF</button></p>
+<aside aria-label="Certificado de finalización" class="hero-cert" data-noprint="" id="hero-cert">
+<div aria-hidden="true" class="hero-cert__preview">
+<div class="hero-cert__band"></div>
+<div class="hero-cert__doc">
+<span class="hero-cert__eyebrow">CERTIFICADO DE FINALIZACIÓN</span>
+<span class="hero-cert__name" id="hero-cert-name">Tu nombre</span>
+<span class="hero-cert__line"></span>
+<span class="hero-cert__course">Guía práctica de prompting</span>
+<span class="hero-cert__idea">I D E A</span>
+</div>
+<span class="hero-cert__li"><b>in</b>Para tu perfil de LinkedIn</span>
+</div>
+<div class="hero-cert__body">
+<strong class="hero-cert__title" id="hero-cert-title">Obtené tu certificado</strong>
+<span class="hero-cert__sub" id="hero-cert-sub">Completá los 17 capítulos y sumalo a tu perfil de LinkedIn.</span>
+<div class="hero-cert__progress" id="hero-cert-progress"><div class="hero-cert__bar"><span id="hero-cert-bar"></span></div><span id="hero-cert-count">0 de 17 capítulos</span></div>
+<div class="hero-cert__actions" id="hero-cert-actions" hidden>
+<button class="st-btn st-btn--md" data-action="certificate" type="button">Descargar certificado</button>
+<a class="li-btn" data-linkedin="" hidden rel="noopener" target="_blank"><span aria-hidden="true">in</span>Agregar a LinkedIn</a>
+</div>
+</div>
+</aside>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:48px">
 <div style="background:#fff;border:1px solid #DDE1DB;border-radius:8px;padding:18px"><div data-edit="portada-e5" style="font:800 36px/1 Inter,sans-serif;color:#F8444F">I</div><div data-edit="portada-e6" style="font:600 14px/1.3 Inter,sans-serif;color:#012C3D;margin-top:10px">Intención</div><div data-edit="portada-e7" style="font-size:13px;line-height:1.45;color:#4D5759;margin-top:4px">Qué problema resolvemos y para qué.</div></div>
 <div style="background:#fff;border:1px solid #DDE1DB;border-radius:8px;padding:18px"><div data-edit="portada-e8" style="font:800 36px/1 Inter,sans-serif;color:#F8444F">D</div><div data-edit="portada-e9" style="font:600 14px/1.3 Inter,sans-serif;color:#012C3D;margin-top:10px">Diseño</div><div data-edit="portada-e10" style="font-size:13px;line-height:1.45;color:#4D5759;margin-top:4px">Usuarios, funciones, datos y pantallas.</div></div>

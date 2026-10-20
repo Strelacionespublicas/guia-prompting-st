@@ -32,7 +32,7 @@ window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];
 // Firma que aparece en el certificado de finalización.
 window.GUIA_CERTIFICADO = {
   firma: 'Stella Torres',
-  cargo: 'Docente · ST Relaciones Públicas',
+  cargo: 'CEO & Founder · Mentora de emprendedores',
   lugar: 'Buenos Aires, Argentina',
   razonSocial: 'ST Relaciones Públicas SAS',
   // Dirección oficial de la guía: la usan el enlace de verificación y LinkedIn

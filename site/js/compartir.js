@@ -125,7 +125,7 @@
     if (assets.firma && d.withSignature !== false) {
       // La firma conserva sus proporciones y apoya sobre la línea (la cruza apenas, como una firma real)
       // Conserva sus proporciones, centrada sobre la línea y apoyada en ella (la cruza apenas, como una firma real)
-      var f = assets.firma, k = Math.min(300 / f.width, 150 / f.height), fw = f.width * k, fh = f.height * k;
+      var f = assets.firma, k = Math.min(300 / f.width, 180 / f.height), fw = f.width * k, fh = f.height * k;
       ctx.drawImage(f, X + (311 - fw) / 2, 684 - fh, fw, fh);
     }
     ctx.fillStyle = PETROL;

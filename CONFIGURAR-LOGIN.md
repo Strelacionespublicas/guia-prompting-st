@@ -15,7 +15,7 @@ Hasta que no se haga, la guía funciona igual que antes: se puede leer, copiar l
 2. Pestaña **Método de acceso** → **Google** → Habilitar.
 3. **Nombre público del proyecto:** poné `Guía práctica de prompting · ST`. Es lo que ve el alumno en la ventana de Google.
 4. Elegí tu email de asistencia y guardá.
-5. Pestaña **Configuración → Dominios autorizados** → **Agregar dominio**: el de Netlify (por ejemplo `guia-prompting.netlify.app`) y, si lo usás, tu dominio propio.
+5. Pestaña **Configuración → Dominios autorizados** → **Agregar dominio**: el del hosting (por ejemplo `guia-prompting-st.pages.dev`) y, si lo usás, tu dominio propio.
 
 ## 3. Crear la base de datos
 
@@ -31,13 +31,13 @@ Hasta que no se haga, la guía funciona igual que antes: se puede leer, copiar l
 3. Abrí `site/js/firebase-config.js` y:
    - reemplazá `window.GUIA_FIREBASE_CONFIG = null;` por `window.GUIA_FIREBASE_CONFIG = { …lo que copiaste… };`
    - en `window.GUIA_ADMINS` poné el mismo email (o emails) que en las reglas.
-4. Volvé a subir la carpeta `site` a Netlify.
+4. Subí los cambios a GitHub (`main`): el sitio se publica solo.
 
 Si preferís, pasale el bloque `firebaseConfig` a Claude y lo deja configurado.
 
 ## 5. Ver el seguimiento
 
-Entrá a `https://tu-sitio.netlify.app/admin.html` con la cuenta docente. Vas a ver:
+Entrá a `https://guia.strelacionespublicas.com.ar/admin.html` con la cuenta docente. Vas a ver:
 
 - cuántos alumnos se registraron y cuántos estuvieron activos en la última semana;
 - cuánto leyó cada uno y en qué capítulo está;
@@ -59,6 +59,6 @@ Con la cuenta docente aparece **✎ Editar guía** en la barra de arriba. En el 
 - **＋ Video o enlace debajo:** hacé clic en un bloque y pegá el link. YouTube, Vimeo, Loom y Google Drive se muestran como reproductor; cualquier otro link aparece como tarjeta.
 - **＋ Cargar video:** está en cada una de las 7 cajas de "Video demostrativo".
 - **Texto original:** descarta las ediciones del bloque seleccionado.
-- **Guardar y publicar:** los alumnos ven los cambios al instante, sin volver a subir nada a Netlify.
+- **Guardar y publicar:** los alumnos ven los cambios al instante, sin volver a publicar nada.
 
-El PDF descargable de la guía no se actualiza solo con estas ediciones: hay que regenerarlo con `npm run pdf` (trae tus ediciones desde Firebase) y volver a subir la carpeta a Netlify.
+El PDF descargable de la guía no se actualiza solo con estas ediciones: hay que regenerarlo con `npm run pdf` (trae tus ediciones desde Firebase) y subir el cambio a GitHub.

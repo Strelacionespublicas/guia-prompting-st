@@ -1,10 +1,9 @@
 # Guía práctica de prompting · ST Relaciones Públicas
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/6380d034-2d8b-4658-994a-7ba5bc795b3b/deploy-status)](https://app.netlify.com/projects/guia-prompting-st/deploys)
 
 Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, ingresan con Google, completan los ejercicios y marcan los capítulos terminados. La docente sigue el avance de cada alumno y puede editar textos, videos y enlaces desde la misma página.
 
-- **Sitio:** https://guia.strelacionespublicas.com.ar (también responde en guia-prompting-st.netlify.app)
+- **Sitio:** https://guia.strelacionespublicas.com.ar (también responde en guia-prompting-st.pages.dev)
 - **Panel de seguimiento:** https://guia.strelacionespublicas.com.ar/admin.html
 - **Firebase:** proyecto `guia-de-prompting` (login con Google y base de datos Firestore)
 
@@ -12,7 +11,7 @@ Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, 
 
 | Carpeta / archivo | Qué es |
 |---|---|
-| `site/` | **El sitio que se publica en Netlify.** HTML, CSS y JS sin build: se sube la carpeta tal cual. |
+| `site/` | **El sitio que se publica en Cloudflare Pages.** HTML, CSS y JS sin build: se sube la carpeta tal cual. |
 | `site/js/firebase-config.js` | Conexión con Firebase y emails de las cuentas docentes. |
 | `site/guia-practica-de-prompting.pdf` | El PDF descargable de la guía (se genera con `npm run pdf`). |
 | `src/` | Código que se compila a `site/js/backend.js` (Firebase) y `site/js/pdf-avance.js` (PDF "Mi avance"). |
@@ -23,7 +22,7 @@ Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, 
 
 ## Tareas frecuentes
 
-**Publicar cambios:** se publican solos. Netlify está conectado a este repositorio y cada cambio que entra en `main` sale online en un minuto (base y publish directory: `site`, sin comando de build).
+**Publicar cambios:** se publican solos. Cloudflare Pages está conectado a este repositorio y cada cambio que entra en `main` sale online en un minuto (build output directory: `site`, sin comando de build). Los encabezados de caché están en `site/_headers`.
 
 **Regenerar el PDF después de editar la guía** (incluye las ediciones publicadas desde la web):
 

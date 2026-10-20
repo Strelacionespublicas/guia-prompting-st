@@ -1,0 +1,10 @@
+# Encabezados HTTP (los lee Cloudflare Pages; Netlify también entiende este formato)
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=604800
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

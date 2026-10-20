@@ -205,9 +205,9 @@
     $$('.js-course-text').forEach(function (el) { el.textContent = n + ' de ' + total + ' terminados'; });
     $$('.js-course-bar').forEach(function (el) { el.style.width = (n / total * 100).toFixed(1) + '%'; });
     $$('[data-mod]').forEach(function (a) {
-      var id = a.getAttribute('data-mod'), st = modStatus(id), f = chapterFields(id);
+      var id = a.getAttribute('data-mod'), st = modStatus(id), f = chapterActivities(id);
       a.className = 'mod is-' + st;
-      a.querySelector('.mod__meta').textContent = f.total ? f.done + ' de ' + f.total + ' ejercicios' : 'Lectura';
+      a.querySelector('.mod__meta').textContent = f.total ? f.done + ' de ' + f.total + (f.total === 1 ? ' actividad' : ' actividades') : 'Lectura';
       a.querySelector('.mod__status').textContent = st === 'done' ? '✓ Completado' : st === 'doing' ? 'En curso' : 'Pendiente';
     });
     sideItems.forEach(function (a, k) {
@@ -341,6 +341,19 @@
     });
     return { total: n, done: d };
   }
+  // Actividades de un capítulo (cada ficha o ejercicio, no cada casillero): con alguna respuesta cuenta como hecha
+  function chapterActivities(id) {
+    var acts = {};
+    Object.keys(fields).forEach(function (f) {
+      if (f.indexOf(id + '-') !== 0) return;
+      var host = document.querySelector('[data-field="' + f + '"]');
+      var name = ((host && host.getAttribute('data-label')) || f).split(' › ')[1] || f;
+      var v = values[f];
+      acts[name] = acts[name] || v === true || (typeof v === 'string' && !!v.trim());
+    });
+    var names = Object.keys(acts);
+    return { total: names.length, done: names.filter(function (k) { return acts[k]; }).length };
+  }
   function shortLabel(i) {
     var c = CHAPTERS[i];
     return /\d/.test(c[1]) ? 'Capítulo ' + Number(c[1]) : (c[1] !== '·' ? 'Anexo ' + c[1] : c[2]);
@@ -364,14 +377,14 @@
   function renderFinish() {
     $$('[data-finish]').forEach(function (card) {
       var id = card.getAttribute('data-finish'), i = CHAPTERS.map(function (c) { return c[0]; }).indexOf(id);
-      var f = chapterFields(id), done = state.finished[id], name = shortLabel(i);
+      var f = chapterActivities(id), done = state.finished[id], name = shortLabel(i);
       var reading = f.total === 0;
       card.classList.toggle('is-done', !!done);
       card.querySelector('strong').textContent = done
         ? (reading ? 'Lectura finalizada' : name + ' completado')
         : (reading ? '¿Terminaste de leer esta sección?' : '¿Terminaste ' + (name.indexOf('Anexo') === 0 ? 'este anexo' : 'este capítulo') + '?');
       var sub = done ? 'Lo marcaste el ' + new Date(done).toLocaleDateString('es-AR') + '.' : '';
-      if (!reading) sub = 'Completaste ' + f.done + ' de ' + f.total + ' espacios de ejercicios. ' + sub;
+      if (!reading) sub = 'Empezaste ' + f.done + ' de ' + f.total + (f.total === 1 ? ' actividad' : ' actividades') + '. ' + sub;
       else if (!done) sub = 'Marcala para llevar la cuenta de tu avance.';
       card.querySelector('.finish__sub').textContent = sub.trim();
       var btn = card.querySelector('button');

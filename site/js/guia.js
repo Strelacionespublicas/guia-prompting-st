@@ -213,7 +213,8 @@
     card.setAttribute('data-noprint', '');
     card.innerHTML = '<div class="cert-card__seal" aria-hidden="true">🎓</div>' +
       '<div class="cert-card__text"><span class="cert-card__eyebrow">CERTIFICADO DE FINALIZACIÓN</span><strong></strong><span class="cert-card__sub"></span></div>' +
-      '<button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>';
+      '<div class="cert-card__actions"><button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>' +
+      '<a class="li-btn" data-linkedin="" target="_blank" rel="noopener" hidden><span aria-hidden="true">in</span>Agregar a LinkedIn</a></div>';
     sec.appendChild(card);
   }
   function renderCert() {
@@ -226,6 +227,42 @@
       ? (user ? 'Descargalo con tu nombre, la fecha y un código único.' : 'Ingresá con Google para descargarlo con tu nombre.')
       : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + '.';
     card.querySelector('button').hidden = !ready;
+    var li = linkedinUrl();
+    $$('[data-linkedin]').forEach(function (a) {
+      a.hidden = !(ready && li);
+      if (li) a.href = li;
+    });
+  }
+
+  // ---- LinkedIn y verificación pública del certificado ----
+  function verifyUrl(code) { return new URL('verificar.html?c=' + encodeURIComponent(code), location.href).href.split('#')[0]; }
+  function linkedinUrl() {
+    var c = state.certificate;
+    if (!c || !c.registered) return '';
+    var conf = window.GUIA_CERTIFICADO || {}, d = new Date(c.at);
+    var q = {
+      startTask: 'CERTIFICATION_NAME',
+      name: conf.titulo || 'Guía práctica de prompting · Curso Claude y Codex',
+      issueYear: d.getFullYear(), issueMonth: d.getMonth() + 1,
+      certUrl: verifyUrl(c.code), certId: c.code
+    };
+    if (conf.linkedinOrgId) q.organizationId = conf.linkedinOrgId;
+    else q.organizationName = conf.organizacion || 'ST Relaciones Públicas';
+    return 'https://www.linkedin.com/profile/add?' + Object.keys(q).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  // Registra el certificado en Firestore (lo exige LinkedIn para "Mostrar credencial")
+  function registerCertificate() {
+    var c = state.certificate;
+    return Promise.resolve().then(function () {
+      return backend.save(user.uid, { progress: progressPatch() }, isNew);
+    }).then(function () {
+      isNew = false;
+      return backend.saveCertificate(c.code, user.uid, c.name, c.at);
+    }).then(function () {
+      c.registered = true;
+      save({ certificate: c });
+      flush();
+    });
   }
 
   var certDlg = null;
@@ -270,21 +307,25 @@
     askName((state.certificate && state.certificate.name) || user.name).then(function (name) {
       if (!name) return;
       var c = state.certificate || {};
-      state.certificate = { name: name, code: c.code || newCode(), at: c.at || Date.now() };
+      state.certificate = { name: name, code: c.code || newCode(), at: c.at || Date.now(), registered: !!(c.registered && c.name === name) };
       save({ certificate: state.certificate });
-      flush();
       flash('Preparando tu certificado…', 6000);
       var conf = window.GUIA_CERTIFICADO || {};
-      Promise.all([loadPdfLib(), toDataUrl('assets/logo-coral.png')]).then(function (r) {
+      var reg = state.certificate.registered ? Promise.resolve() : registerCertificate().catch(function () { /* sin verificación pública */ });
+      Promise.all([loadPdfLib(), toDataUrl('assets/logo-coral.png'), reg]).then(function (r) {
         var doc = window.GuiaPdfCertificado({
           name: name, logo: r[1], code: state.certificate.code,
           date: new Date(state.certificate.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }),
           detail: FINISHABLE.length + ' capítulos y anexos completados',
-          signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || ''
+          signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || '',
+          verify: state.certificate.registered ? verifyUrl(state.certificate.code) : ''
         });
         var who = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
         doc.save('Certificado-guia-prompting-' + who + '.pdf');
-        flash('¡Felicitaciones! Tu certificado se descargó.', 4500);
+        renderCert();
+        var li = linkedinUrl();
+        if (li) showBanner('¡Felicitaciones! Tu certificado se descargó. ¿Lo sumás a tu perfil?', null, 'Agregar a LinkedIn', function () { window.open(li, '_blank', 'noopener'); });
+        else flash('¡Felicitaciones! Tu certificado se descargó.', 4500);
       }).catch(function () { flash('No se pudo generar el certificado. Revisá la conexión y probá de nuevo.', 5000); });
     });
   }

@@ -34,6 +34,21 @@ service cloud.firestore {
         && request.resource.data.extras is map;
     }
 
+    // Certificados de finalización: cualquiera puede verificar uno por su código,
+    // pero no listarlos. Solo lo registra el propio alumno, con los 17 capítulos terminados.
+    match /certificates/{code} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && (resource == null || resource.data.uid == request.auth.uid)
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'issuedAt', 'course'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && code.matches('ST-[A-Z0-9]{4}-[A-Z0-9]{4}')
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.progress.finishedCount >= 17;
+      allow delete: if false;
+    }
+
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create, update: if isOwner(uid) && validDoc();

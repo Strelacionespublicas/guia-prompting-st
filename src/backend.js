@@ -67,6 +67,14 @@ const backend = {
   saveContent(data, email) {
     return setDoc(doc(db, 'content', 'guia'), { ...data, updatedBy: email || '', updatedAt: serverTimestamp() });
   },
+  // Certificados: registro público por código para la página de verificación
+  async getCertificate(code) {
+    const snap = await getDoc(doc(db, 'certificates', code));
+    return snap.exists() ? snap.data() : null;
+  },
+  saveCertificate(code, uid, name, issuedAt) {
+    return setDoc(doc(db, 'certificates', code), { uid, name, issuedAt, course: 'Guía práctica de prompting' });
+  },
   async listUsers() {
     const snap = await getDocs(collection(db, 'users'));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));

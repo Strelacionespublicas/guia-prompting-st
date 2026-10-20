@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Verificar certificado — Guía práctica de prompting</title>
+<meta content="Verificación de certificados de finalización de la Guía práctica de prompting · Curso Claude y Codex · ST Relaciones Públicas." name="description"/>
+<meta content="#012C3D" name="theme-color"/>
+<meta content="website" property="og:type"/>
+<meta content="Certificado de finalización · Guía práctica de prompting" property="og:title"/>
+<meta content="Curso Claude y Codex · ST Relaciones Públicas" property="og:description"/>
+<link href="favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="css/tokens.css" rel="stylesheet"/>
+<link href="css/guia.css" rel="stylesheet"/>
+<link href="css/verificar.css" rel="stylesheet"/>
+<script src="js/firebase-config.js"></script>
+<script type="module" src="js/backend.js"></script>
+<script defer src="js/verificar.js"></script>
+</head>
+<body class="vf">
+<main class="vf-wrap">
+<a aria-label="Ir a la guía" class="vf-logo" href="./"><span class="st-logo"><img alt="ST Relaciones Públicas" height="36" src="assets/logo-coral.png" style="height:36px"/><span class="st-logo__desc" style="font-size:11px;margin-top:4.32px">Relaciones Públicas</span></span></a>
+
+<section class="vf-card" id="loading" aria-live="polite">
+<p class="vf-muted">Verificando certificado…</p>
+</section>
+
+<section class="vf-card vf-card--ok" hidden id="ok">
+<div class="vf-badge"><span aria-hidden="true">✓</span>Certificado válido</div>
+<p class="vf-eyebrow">CERTIFICADO DE FINALIZACIÓN</p>
+<h1 class="vf-name" id="vf-name"></h1>
+<p class="vf-text">completó la <strong>Guía práctica de prompting</strong> del curso de Claude y Codex: 17 capítulos y anexos sobre cómo crear herramientas digitales con inteligencia artificial, aplicando el método IDEA.</p>
+<dl class="vf-data">
+<div><dt>Fecha de emisión</dt><dd id="vf-date"></dd></div>
+<div><dt>Código</dt><dd id="vf-code"></dd></div>
+<div><dt>Emitido por</dt><dd>ST Relaciones Públicas</dd></div>
+</dl>
+<a class="st-btn st-btn--md" href="./">Conocer la guía</a>
+</section>
+
+<section class="vf-card vf-card--bad" hidden id="bad">
+<div class="vf-badge vf-badge--bad"><span aria-hidden="true">!</span>No encontramos este certificado</div>
+<p class="vf-text">Revisá que el código esté completo, con el formato <strong>ST-XXXX-XXXX</strong>.</p>
+<form class="vf-form" id="vf-form">
+<label for="vf-input">Código del certificado</label>
+<div><input autocomplete="off" id="vf-input" placeholder="ST-XXXX-XXXX" spellcheck="false" type="text"/><button class="st-btn st-btn--md" type="submit">Verificar</button></div>
+</form>
+</section>
+</main>
+</body>
+</html>

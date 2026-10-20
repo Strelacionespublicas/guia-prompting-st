@@ -1,0 +1,23 @@
+/* Página de verificación de certificados */
+body.vf{background:#F7F8F3;min-height:100vh}
+.vf-wrap{max-width:640px;margin:0 auto;padding:clamp(28px,6vw,64px) 16px 64px}
+.vf-logo{display:inline-flex;margin-bottom:28px}
+.vf-logo:hover{text-decoration:none}
+.vf-card{background:#fff;border:1px solid #DDE1DB;border-radius:16px;padding:clamp(22px,5vw,40px);box-shadow:var(--shadow-md)}
+.vf-card--ok{border-top:6px solid #1F8A5B}
+.vf-card--bad{border-top:6px solid #F8444F}
+.vf-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#E4F3EC;color:#1F8A5B;font:700 13px/1 Inter,sans-serif}
+.vf-badge span{display:inline-flex;width:18px;height:18px;border-radius:999px;background:#1F8A5B;color:#fff;align-items:center;justify-content:center;font-size:12px}
+.vf-badge--bad{background:#FEE0E2;color:#D32B36}
+.vf-badge--bad span{background:#D32B36}
+.vf-eyebrow{font:700 12px/1 Inter,sans-serif;letter-spacing:.12em;color:#D32B36;margin:24px 0 8px}
+.vf-name{font-size:clamp(28px,6vw,40px);line-height:1.15;margin:0 0 12px}
+.vf-text{font-size:16px;color:#333C3F;margin:12px 0 20px}
+.vf-muted{color:#6F7A7C;margin:0}
+.vf-data{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 24px;padding:16px 0;border-top:1px solid #DDE1DB;border-bottom:1px solid #DDE1DB}
+.vf-data dt{font:600 12px/1.3 Inter,sans-serif;color:#6F7A7C;text-transform:uppercase;letter-spacing:.06em}
+.vf-data dd{margin:4px 0 0;font:600 15px/1.3 Inter,sans-serif;color:#012C3D}
+.vf-form label{display:block;font:600 13px Inter,sans-serif;color:#012C3D;margin-bottom:6px}
+.vf-form div{display:flex;gap:8px;flex-wrap:wrap}
+.vf-form input{flex:1;min-width:180px;height:44px;border:1px solid #C3C9C4;border-radius:8px;padding:0 12px;font:600 16px Inter,sans-serif;letter-spacing:.04em;color:#1C2429;text-transform:uppercase}
+.vf-form input:focus{outline:none;border-color:#78BDC4;box-shadow:var(--shadow-focus)}

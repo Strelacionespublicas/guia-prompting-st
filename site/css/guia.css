@@ -144,6 +144,14 @@ label:has(>.chk:checked)>span{color:#6F7A7C}
 .cert-card.is-locked .cert-card__sub{color:#4D5759}
 .cert-card.is-locked .cert-card__eyebrow{color:#D32B36}
 body:not(.cert-ready) .cert-only{display:none!important}
+.cert-card__actions{display:flex;flex-wrap:wrap;gap:10px}
+.li-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;background:#0A66C2;color:#fff;font:600 15px/1 Inter,sans-serif;text-decoration:none;box-sizing:border-box}
+.li-btn:hover{background:#004182;color:#fff;text-decoration:none}
+.li-btn span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;background:#fff;color:#0A66C2;font:800 13px/1 Inter,sans-serif}
+.li-btn[hidden],.account-menu__li[hidden]{display:none!important}
+.account-menu__li{display:block;margin-top:8px;text-align:center;height:36px;line-height:36px;border-radius:8px;background:#0A66C2;color:#fff;font:600 13px/36px Inter,sans-serif;text-decoration:none}
+.account-menu__li:hover{background:#004182;color:#fff;text-decoration:none}
+@media (max-width:480px){.cert-card__actions,.li-btn{width:100%}}
 .account-menu__cert{margin-top:8px;width:100%;height:36px;border:0;border-radius:8px;background:#F8444F;font:600 14px/1 Inter,sans-serif;color:#fff;cursor:pointer}
 @media (max-width:480px){.cert-card .st-btn{width:100%}}
 

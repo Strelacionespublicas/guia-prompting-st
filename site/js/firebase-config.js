@@ -32,5 +32,10 @@ window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];
 // Firma que aparece en el certificado de finalización.
 window.GUIA_CERTIFICADO = {
   firma: 'Stella Torres',
-  cargo: 'Docente · ST Relaciones Públicas'
+  cargo: 'Docente · ST Relaciones Públicas',
+  // Cómo aparece en LinkedIn ("Licencias y certificaciones")
+  titulo: 'Guía práctica de prompting · Curso Claude y Codex',
+  organizacion: 'ST Relaciones Públicas',
+  // ID numérico de la página de empresa en LinkedIn: si se completa, se muestra el logo de ST
+  linkedinOrgId: ''
 };

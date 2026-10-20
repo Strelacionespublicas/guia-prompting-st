@@ -177,6 +177,10 @@ export function crearCertificado(d) {
   font('normal', 9); color(MUTED); doc.text(clean(d.signerRole || ''), 30, by + 7);
   font('bold', 10.5); color(PETROL); doc.text(clean(d.date || ''), PW - 30, by + 2, { align: 'right' });
   font('normal', 9); color(MUTED); doc.text('Código de certificado: ' + clean(d.code || ''), PW - 30, by + 7, { align: 'right' });
+  if (d.verify) {
+    font('normal', 7.5); color(MUTED);
+    doc.textWithLink('Verificá este certificado en ' + clean(d.verify), cx, PH - 15.5, { align: 'center', url: d.verify });
+  }
   return doc;
 }
 

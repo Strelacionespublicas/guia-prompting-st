@@ -7,6 +7,7 @@ Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relac
 - Firebase (`guia-de-prompting`): Auth con Google + Firestore lite.
   - `users/{uid}`: `profile`, `progress` (incluye `finished` por capítulo), `fields` (respuestas por id de campo), `stats`.
   - `content/guia`: ediciones de la docente (`blocks`, `videos`, `extras`), lectura pública.
+  - `certificates/{código ST-XXXX-XXXX}`: certificados emitidos (`uid`, `name`, `issuedAt`), lectura pública por código para `verificar.html`, que es la URL de "Mostrar credencial" en LinkedIn. Solo se crean con los 17 capítulos terminados.
   - Las reglas están en `firestore.rules`; la docente las pega a mano en la consola.
 - `site/js/guia.js`: lectura, índice, marcador, capítulos terminados, campos, copiar prompts, PDF "Mi avance", sesión.
 - `site/js/contenido.js`: aplica las ediciones de la docente (para todos). `site/js/editor.js`: modo edición (solo admins).

@@ -1,5 +1,7 @@
 # Guía práctica de prompting · ST Relaciones Públicas
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6380d034-2d8b-4658-994a-7ba5bc795b3b/deploy-status)](https://app.netlify.com/projects/guia-prompting-st/deploys)
+
 Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, ingresan con Google, completan los ejercicios y marcan los capítulos terminados. La docente sigue el avance de cada alumno y puede editar textos, videos y enlaces desde la misma página.
 
 - **Sitio:** https://guia-prompting-st.netlify.app

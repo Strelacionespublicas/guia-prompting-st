@@ -21,7 +21,7 @@ Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, 
 
 ## Tareas frecuentes
 
-**Publicar cambios:** subir la carpeta `site/` en Netlify → proyecto `guia-prompting-st` → Deploys (arrastrar la carpeta).
+**Publicar cambios:** se publican solos. Netlify está conectado a este repositorio y cada cambio que entra en `main` sale online en un minuto (base y publish directory: `site`, sin comando de build).
 
 **Regenerar el PDF después de editar la guía** (incluye las ediciones publicadas desde la web):
 

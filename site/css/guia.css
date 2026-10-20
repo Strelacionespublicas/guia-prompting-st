@@ -361,3 +361,8 @@ body:not(.edit-mode) .edit-only{display:none!important}
 .lms-side__list a.is-current{background:#DCEEF0;font-weight:700;box-shadow:inset 3px 0 0 #F8444F}
 .lms-side__mark{font:700 13px/1 Inter,sans-serif;color:#1F8A5B}
 .lms-side__num{font:700 12px/1 Inter,sans-serif;color:#5CA8AF}
+
+/* Sello "gratis" de la portada */
+.free-badge{display:inline-flex;width:max-content;max-width:100%;justify-self:start;box-sizing:border-box;align-items:center;gap:10px;margin-bottom:18px;padding:5px 14px 5px 5px;border-radius:999px;background:#DCEEF0;color:#012C3D;font:600 14px/1.2 Inter,sans-serif}
+.free-badge span{padding:5px 10px;border-radius:999px;background:#012C3D;color:#fff;font:800 12px/1 Inter,sans-serif;letter-spacing:.08em}
+@media print{.free-badge{border:1px solid #A7D5DA}}

@@ -1,5 +1,5 @@
 // Genera las imágenes de vista previa (1200×630) que muestran LinkedIn, WhatsApp, etc.
-// al compartir un enlace: site/assets/og-guia.png y site/assets/og-certificado.png.
+// al compartir un enlace: site/assets/og-guia-v2.png y site/assets/og-certificado.png.
 // Uso: node scripts/generar-og.js
 const path = require('path');
 const { chromium } = require('playwright');
@@ -28,8 +28,11 @@ const guia = `<!doctype html><html><head><meta charset="utf-8"><base href="${bas
   .idea{position:absolute;right:0;bottom:0;display:flex;gap:12px}
   .idea b{width:72px;height:72px;border-radius:12px;background:#fff;border:2px solid #DDE1DB;display:flex;align-items:center;justify-content:center;font:800 40px Inter;color:#F8444F}
   .logo{position:absolute;left:0;bottom:0;height:62px}
+  .free{position:absolute;right:0;top:-6px;display:flex;align-items:center;gap:12px;padding:8px 22px 8px 8px;border-radius:999px;background:#DCEEF0;font:700 24px/1 Inter;color:#012C3D}
+  .free b{padding:10px 18px;border-radius:999px;background:#F8444F;color:#fff;font:800 22px/1 Inter;letter-spacing:.08em}
 </style></head><body><div class="band"></div><div class="wrap">
-  <div class="eyebrow">CUADERNO DE TRABAJO · CURSO CLAUDE Y CODEX</div>
+  <div class="eyebrow">GUÍA GRATUITA · CLAUDE Y CODEX</div>
+  <div class="free"><b>GRATIS</b>Con certificado</div>
   <h1>GUÍA PRÁCTICA<br>DE PROMPTING</h1>
   <p>Cómo crear herramientas digitales con Claude y Codex, aunque no seas programador.</p>
   <img class="logo" src="${LOGO}">
@@ -56,7 +59,7 @@ const certificado = `<!doctype html><html><head><meta charset="utf-8"><base href
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-  for (const [name, html] of [['og-guia', guia], ['og-certificado', certificado]]) {
+  for (const [name, html] of [['og-guia-v2', guia], ['og-certificado', certificado]]) {
     await page.setContent(html, { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: path.join(SITE, 'assets', name + '.png') });

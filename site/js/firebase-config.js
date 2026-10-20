@@ -28,3 +28,9 @@ window.GUIA_FIREBASE_CONFIG = {
 // Cuentas de Google que pueden ver el panel de seguimiento (admin.html).
 // Tienen que coincidir con la lista de firestore.rules.
 window.GUIA_ADMINS = ['stellamaris.torres@gmail.com'];
+
+// Firma que aparece en el certificado de finalización.
+window.GUIA_CERTIFICADO = {
+  firma: 'Stella Torres',
+  cargo: 'Docente · ST Relaciones Públicas'
+};

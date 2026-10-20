@@ -57,6 +57,7 @@
   }
   // % de capítulos que el alumno marcó como terminados
   function pct(u) { return Math.round((u.progress && u.progress.pct) || 0); }
+  function cert(u) { return u.progress && u.progress.certificate; }
   function finished(u) {
     var p = u.progress || {};
     return (p.finishedCount || 0) + ' de ' + (p.finishedTotal || 17);
@@ -86,7 +87,7 @@
       var done = doneOf(u), p = pct(u);
       var where = (u.progress && u.progress.where) || '—';
       return '<tr tabindex="0" data-id="' + esc(u.id) + '">' +
-        '<td><div class="adm-name">' + esc(name(u)) + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
+        '<td><div class="adm-name">' + esc(name(u)) + (cert(u) ? ' <span class="adm-cert" title="Certificado emitido">🎓</span>' : '') + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
         '<td><div class="adm-meter"><span style="width:' + p + '%"></span></div><span class="adm-num">' + finished(u) + '</span></td>' +
         '<td>' + esc(where) + '</td>' +
         '<td><span class="adm-num">' + done + '</span> de ' + total + '</td>' +
@@ -108,7 +109,9 @@
       if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
       groups[g].push([parts.join(' › '), f[fid]]);
     });
-    var html = '<p class="adm-detail__meta">Terminó ' + finished(u) + ' capítulos · está en ' + esc((u.progress && u.progress.where) || '—') +
+    var c = cert(u);
+    var html = (c ? '<p class="adm-detail__cert">🎓 Certificado emitido el ' + esc(new Date(c.at).toLocaleDateString('es-AR')) + ' a nombre de <strong>' + esc(c.name) + '</strong> · código ' + esc(c.code) + '</p>' : '') +
+      '<p class="adm-detail__meta">Terminó ' + finished(u) + ' capítulos · está en ' + esc((u.progress && u.progress.where) || '—') +
       (u.progress && u.progress.bookmark ? '' : '') + ' · ' + doneOf(u) + ' espacios completados</p>';
     if (!groupOrder.length) html += '<p class="adm-empty">Todavía no completó ningún espacio.</p>';
     groupOrder.forEach(function (g) {
@@ -126,11 +129,12 @@
 
   function csv() {
     var cell = function (v) { v = v === true ? 'Sí' : v === false || v == null ? '' : String(v); return '"' + v.replace(/"/g, '""') + '"'; };
-    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad'].concat(order.map(function (id) { return labels[id]; }));
+    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad', 'Certificado'].concat(order.map(function (id) { return labels[id]; }));
     var lines = [head.map(cell).join(',')];
     users.forEach(function (u) {
       var d = lastActivity(u), f = u.fields || {};
-      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '']
+      var c = cert(u);
+      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '', c ? c.code + ' (' + new Date(c.at).toLocaleDateString('es-AR') + ')' : '']
         .concat(order.map(function (id) { return f[id]; })).map(cell).join(','));
     });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });

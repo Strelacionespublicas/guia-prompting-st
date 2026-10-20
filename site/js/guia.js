@@ -28,7 +28,7 @@
   var menuBtn = document.querySelector('[data-action="account-menu"]');
   var sections = CHAPTERS.map(function (c) { return $(c[0]); });
 
-  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, bannerTarget: null };
+  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, certificate: null, bannerTarget: null };
   // Capítulos y anexos que se marcan como terminados (todo menos el índice)
   var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice'; });
   var flashTimer = null, raf = null, lastFocus = null;
@@ -200,7 +200,95 @@
       btn.textContent = done ? 'Desmarcar' : (reading ? '✓ Marcar lectura finalizada' : '✓ Marcar como completado');
       btn.setAttribute('aria-pressed', done ? 'true' : 'false');
     });
+    renderCert();
   }
+  // ---- Certificado de finalización (al marcar los 17) ----
+  function allFinished() { return finishedCount() === FINISHABLE.length; }
+  function buildCertCard() {
+    var sec = $('glosario');
+    if (!sec) return;
+    var card = document.createElement('div');
+    card.className = 'cert-card';
+    card.id = 'certificado';
+    card.setAttribute('data-noprint', '');
+    card.innerHTML = '<div class="cert-card__seal" aria-hidden="true">🎓</div>' +
+      '<div class="cert-card__text"><span class="cert-card__eyebrow">CERTIFICADO DE FINALIZACIÓN</span><strong></strong><span class="cert-card__sub"></span></div>' +
+      '<button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>';
+    sec.appendChild(card);
+  }
+  function renderCert() {
+    var card = $('certificado'), ready = allFinished(), left = FINISHABLE.length - finishedCount();
+    body.classList.toggle('cert-ready', ready);
+    if (!card) return;
+    card.classList.toggle('is-locked', !ready);
+    card.querySelector('strong').textContent = ready ? '¡Completaste toda la guía!' : 'Tu certificado te espera al final del recorrido';
+    card.querySelector('.cert-card__sub').textContent = ready
+      ? (user ? 'Descargalo con tu nombre, la fecha y un código único.' : 'Ingresá con Google para descargarlo con tu nombre.')
+      : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + '.';
+    card.querySelector('button').hidden = !ready;
+  }
+
+  var certDlg = null;
+  function askName(current) {
+    if (!certDlg) {
+      certDlg = document.createElement('dialog');
+      certDlg.className = 'ed-dlg';
+      certDlg.setAttribute('data-noprint', '');
+      certDlg.innerHTML = '<form method="dialog"><h2 class="ed-dlg__title">Tu certificado</h2>' +
+        '<p class="ed-dlg__hint">Así va a figurar tu nombre en el certificado. Revisalo antes de descargarlo.</p>' +
+        '<label class="ed-dlg__row">Nombre y apellido<input name="name" type="text" maxlength="70" autocomplete="name" required></label>' +
+        '<div class="ed-dlg__actions"><span></span><button type="button" data-c="cancel">Cancelar</button><button type="submit" class="ed-primary">Descargar</button></div></form>';
+      document.body.appendChild(certDlg);
+    }
+    return new Promise(function (resolve) {
+      var input = certDlg.querySelector('[name="name"]');
+      input.value = current || '';
+      certDlg.onsubmit = function (e) {
+        e.preventDefault();
+        var v = input.value.replace(/\s+/g, ' ').trim();
+        if (v.length < 3) { input.focus(); return; }
+        certDlg.close();
+        resolve(v);
+      };
+      certDlg.querySelector('[data-c="cancel"]').onclick = function () { certDlg.close(); resolve(null); };
+      certDlg.oncancel = function () { resolve(null); };
+      certDlg.showModal();
+      input.select();
+    });
+  }
+  function newCode() {
+    var a = new Uint32Array(2);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    var s = (a[0].toString(36) + a[1].toString(36)).toUpperCase().replace(/[^A-Z0-9]/g, '') + 'XXXXXXXX';
+    return 'ST-' + s.slice(0, 4) + '-' + s.slice(4, 8);
+  }
+  function downloadCertificate() {
+    closeMenu();
+    closeDrawer(false);
+    if (!allFinished()) { flash('El certificado se habilita cuando marcás los ' + FINISHABLE.length + ' capítulos como terminados.', 4500); return; }
+    if (!canEdit()) { askLogin(); return; }
+    askName((state.certificate && state.certificate.name) || user.name).then(function (name) {
+      if (!name) return;
+      var c = state.certificate || {};
+      state.certificate = { name: name, code: c.code || newCode(), at: c.at || Date.now() };
+      save({ certificate: state.certificate });
+      flush();
+      flash('Preparando tu certificado…', 6000);
+      var conf = window.GUIA_CERTIFICADO || {};
+      Promise.all([loadPdfLib(), toDataUrl('assets/logo-coral.png')]).then(function (r) {
+        var doc = window.GuiaPdfCertificado({
+          name: name, logo: r[1], code: state.certificate.code,
+          date: new Date(state.certificate.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }),
+          detail: FINISHABLE.length + ' capítulos y anexos completados',
+          signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || ''
+        });
+        var who = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        doc.save('Certificado-guia-prompting-' + who + '.pdf');
+        flash('¡Felicitaciones! Tu certificado se descargó.', 4500);
+      }).catch(function () { flash('No se pudo generar el certificado. Revisá la conexión y probá de nuevo.', 5000); });
+    });
+  }
+
   function toggleFinish(btn) {
     var id = btn.getAttribute('data-ref');
     if (state.finished[id]) delete state.finished[id];
@@ -214,7 +302,8 @@
     for (var j = i + 1; j < CHAPTERS.length; j++) if (!state.finished[CHAPTERS[j][0]]) { next = j; break; }
     var msg = '¡Bien! Llevás ' + finishedCount() + ' de ' + FINISHABLE.length + ' terminados.';
     if (next >= 0) showBanner(msg, { idx: next, delta: 0 }, 'Seguir con ' + shortLabel(next));
-    else flash(finishedCount() === FINISHABLE.length ? '¡Terminaste toda la guía! 🎉' : msg, 4500);
+    else if (allFinished()) showBanner('¡Terminaste toda la guía! 🎉', null, 'Descargar mi certificado', downloadCertificate);
+    else flash(msg, 4500);
   }
 
   function markHere() {
@@ -231,6 +320,7 @@
   function loadPdfLib() {
     if (!pdfLib) {
       pdfLib = import(new URL('js/pdf-avance.js', document.baseURI).href).then(function () { return window.GuiaPdfAvance; });
+      // window.GuiaPdfCertificado queda disponible con el mismo módulo
       pdfLib.catch(function () { pdfLib = null; });
     }
     return pdfLib;
@@ -459,6 +549,7 @@
       finished: state.finished, pct: Math.round(finishedPct()), finishedCount: finishedCount(), finishedTotal: FINISHABLE.length };
     if (state.bookmark) p.bookmark = state.bookmark;
     if (state.last) p.last = state.last;
+    if (state.certificate) p.certificate = state.certificate;
     var at = state.last || state.bookmark;
     if (at) p.where = label(at.idx); // texto legible para el panel de seguimiento
     return p;
@@ -502,9 +593,11 @@
     if (typeof remote.maxPct === 'number') state.maxPct = Math.max(state.maxPct, remote.maxPct);
     if (remote.bookmark && (!state.bookmark || (remote.bookmark.at || 0) > (state.bookmark.at || 0))) state.bookmark = remote.bookmark;
     if (!state.last && remote.last) state.last = remote.last;
+    if (remote.certificate && !state.certificate) state.certificate = remote.certificate;
     var rf = remote.finished || {};
     for (var id in rf) if (!state.finished[id]) state.finished[id] = rf[id];
     var local = { maxIdx: state.maxIdx, maxPct: state.maxPct, finished: state.finished };
+    if (state.certificate) local.certificate = state.certificate;
     if (state.bookmark) local.bookmark = state.bookmark;
     if (state.last) local.last = state.last;
     var saved = load();
@@ -647,7 +740,8 @@
     'account-menu': function () { if (menu.hidden) openMenu(); else closeMenu(); },
     'copy': copyPrompt,
     'edit-guide': startEditor,
-    'finish': toggleFinish
+    'finish': toggleFinish,
+    'certificate': downloadCertificate
   };
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-action]');
@@ -684,7 +778,10 @@
   state.bookmark = saved.bookmark || null;
   state.last = saved.last || null;
   state.finished = saved.finished || {};
+  state.certificate = saved.certificate || null;
   buildFinishCards();
+  buildCertCard(); // va después del "¿Terminaste?" del glosario
+  renderCert();
   var resumeFrom = saved.bookmark || saved.last;
   if (resumeFrom && resumeFrom.idx > 0 && !location.hash) {
     showBanner((saved.bookmark ? 'Marcaste hasta: ' : 'La última vez llegaste a: ') + label(resumeFrom.idx), resumeFrom);

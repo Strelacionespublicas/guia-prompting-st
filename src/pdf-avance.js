@@ -127,4 +127,58 @@ export function crearPdfAvance(d) {
   return doc;
 }
 
+// Certificado de finalización: A4 horizontal, con nombre, fecha, firma y código único.
+export function crearCertificado(d) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+  const PW = 297, PH = 210, cx = PW / 2;
+  const color = (c) => doc.setTextColor(c[0], c[1], c[2]);
+  const font = (style, size) => { doc.setFont('helvetica', style); doc.setFontSize(size); };
+
+  // Marco y franjas de marca
+  doc.setFillColor(...PETROL); doc.rect(0, 0, PW, 9, 'F');
+  doc.setFillColor(...CORAL); doc.rect(0, 9, PW, 1.6, 'F');
+  doc.setDrawColor(...LINE); doc.setLineWidth(0.4); doc.rect(12, 20, PW - 24, PH - 32);
+  doc.setFillColor(...SOFT); doc.rect(12, PH - 40, PW - 24, 28, 'F');
+
+  if (d.logo) { try { doc.addImage(d.logo, 'PNG', 24, 28, 20, 13.9); } catch (e) { /* sin logo */ } }
+  font('bold', 8.5); color(MUTED);
+  doc.text('CURSO CLAUDE Y CODEX · CUADERNO DE TRABAJO', PW - 24, 34, { align: 'right' });
+
+  font('bold', 13); color(CORAL);
+  doc.text('CERTIFICADO DE FINALIZACIÓN', cx, 62, { align: 'center', charSpace: 1.2 });
+  font('normal', 13); color(TEXT);
+  doc.text('Se certifica que', cx, 76, { align: 'center' });
+
+  // Nombre: se achica si es muy largo para que entre en una línea
+  const name = clean(d.name || '');
+  let size = 34;
+  font('bold', size);
+  while (doc.getTextWidth(name) > PW - 70 && size > 18) { size -= 1; font('bold', size); }
+  color(PETROL); doc.text(name, cx, 94, { align: 'center' });
+  doc.setDrawColor(...CORAL); doc.setLineWidth(0.8); doc.line(cx - 30, 100, cx + 30, 100);
+
+  font('normal', 13); color(TEXT);
+  doc.text('completó la', cx, 112, { align: 'center' });
+  font('bold', 20); color(PETROL);
+  doc.text('Guía práctica de prompting', cx, 123, { align: 'center' });
+  font('normal', 11); color(MUTED);
+  doc.text('Cómo crear herramientas digitales con Claude y Codex, aunque no seas programador.', cx, 131, { align: 'center' });
+  doc.text(clean(d.detail || ''), cx, 138, { align: 'center' });
+
+  // Método IDEA como sello visual
+  const letters = ['I', 'D', 'E', 'A'], gap = 11, x0 = cx - (gap * 3) / 2;
+  font('bold', 15); color(CORAL);
+  letters.forEach((l, i) => doc.text(l, x0 + i * gap, 152, { align: 'center' }));
+
+  // Firma, fecha y código
+  const by = PH - 26;
+  doc.setDrawColor(...PETROL); doc.setLineWidth(0.3); doc.line(30, by - 3, 100, by - 3);
+  font('bold', 10.5); color(PETROL); doc.text(clean(d.signer || ''), 30, by + 2);
+  font('normal', 9); color(MUTED); doc.text(clean(d.signerRole || ''), 30, by + 7);
+  font('bold', 10.5); color(PETROL); doc.text(clean(d.date || ''), PW - 30, by + 2, { align: 'right' });
+  font('normal', 9); color(MUTED); doc.text('Código de certificado: ' + clean(d.code || ''), PW - 30, by + 7, { align: 'right' });
+  return doc;
+}
+
 window.GuiaPdfAvance = crearPdfAvance;
+window.GuiaPdfCertificado = crearCertificado;

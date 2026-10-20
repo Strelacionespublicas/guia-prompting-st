@@ -172,7 +172,19 @@
         box.appendChild(btn);
       }
       btn.textContent = v && v.url ? 'Cambiar o quitar video' : '＋ Cargar video';
+      // Sin enlace, el recuadro no se muestra a los alumnos (en modo edición sí, para cargarlo)
+      box.classList.toggle('video-ready', !!(v && safeUrl(v.url)));
     });
+
+    // Tabla de videos del índice: solo los que ya están cargados; sin ninguno, se oculta entera
+    var anyVideo = false;
+    Array.prototype.forEach.call(document.querySelectorAll('#indice a[href^="#video"]'), function (a) {
+      var v = current.videos[a.getAttribute('href').slice(1)], ok = !!(v && safeUrl(v.url));
+      var row = a.closest('tr');
+      if (row) row.classList.toggle('video-row-pending', !ok);
+      anyVideo = anyVideo || ok;
+    });
+    document.body.classList.toggle('has-videos', anyVideo);
 
     // Videos y enlaces agregados debajo de un bloque
     Array.prototype.forEach.call(document.querySelectorAll('.media-extra'), function (n) { n.remove(); });

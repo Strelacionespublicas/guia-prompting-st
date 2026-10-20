@@ -214,7 +214,8 @@
     card.innerHTML = '<div class="cert-card__seal" aria-hidden="true">🎓</div>' +
       '<div class="cert-card__text"><span class="cert-card__eyebrow">CERTIFICADO DE FINALIZACIÓN</span><strong></strong><span class="cert-card__sub"></span></div>' +
       '<div class="cert-card__actions"><button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>' +
-      '<a class="li-btn" data-linkedin="" target="_blank" rel="noopener" hidden><span aria-hidden="true">in</span>Agregar a LinkedIn</a></div>';
+      '<a class="li-btn" data-linkedin="" target="_blank" rel="noopener" hidden><span aria-hidden="true">in</span>Agregar a mi perfil</a>' +
+      '<button type="button" class="li-btn li-btn--outline" data-share="" data-action="share-linkedin" hidden><span aria-hidden="true">in</span>Publicar en LinkedIn</button></div>';
     sec.appendChild(card);
   }
   function renderCert() {
@@ -233,6 +234,7 @@
       a.hidden = !(ready && li);
       if (li) a.href = li;
     });
+    $$('[data-share]').forEach(function (b) { b.hidden = !(ready && li); });
   }
 
   // Tarjeta del certificado en la portada: motiva desde el inicio y, al terminar, da acceso directo
@@ -267,6 +269,50 @@
     else q.organizationName = conf.organizacion || 'ST Relaciones Públicas';
     return 'https://www.linkedin.com/profile/add?' + Object.keys(q).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
   }
+  // Publicación en LinkedIn: LinkedIn no deja elegir la imagen de su aviso automático
+  // ("Celebrando un nuevo certificado"), así que damos la imagen del certificado y el texto listo.
+  var shareLoading = null;
+  function postText() {
+    var c = state.certificate;
+    return 'Terminé la Guía práctica de prompting del curso de Claude y Codex de ST Relaciones Públicas 🎓\n\n' +
+      'Aprendí a pasar de una idea a una herramienta digital con el método IDEA: pensar antes de pedir, documentar antes de construir y validar antes de publicar.\n\n' +
+      'Verificá mi certificado: ' + verifyUrl(c.code) + '\n\n#InteligenciaArtificial #Claude #Prompting';
+  }
+  function shareLinkedIn() {
+    closeMenu();
+    var c = state.certificate;
+    if (!c || !c.registered) { flash('Primero descargá tu certificado.'); return; }
+    // Respaldo: el texto queda copiado por si LinkedIn no lo completa solo
+    copyText(postText()).catch(function () {});
+    // Se abre LinkedIn enseguida (si no, el navegador bloquea la ventana) y la imagen se descarga acá
+    window.open('https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(postText()), '_blank', 'noopener');
+    if (!shareLoading) {
+      shareLoading = new Promise(function (resolve, reject) {
+        var sc = document.createElement('script');
+        sc.src = 'js/compartir.js';
+        sc.onload = resolve;
+        sc.onerror = function () { shareLoading = null; reject(); };
+        document.head.appendChild(sc);
+      });
+    }
+    var conf = window.GUIA_CERTIFICADO || {};
+    shareLoading.then(function () {
+      return window.GuiaCompartir.imagen({
+        name: c.name, code: c.code, detail: FINISHABLE.length + ' capítulos y anexos completados',
+        signer: conf.firma || 'ST Relaciones Públicas', signerRole: conf.cargo || '',
+        date: new Date(c.at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+      });
+    }).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Certificado-guia-prompting.png';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      showBanner('Se descargó la imagen de tu certificado. En LinkedIn, sumala con el ícono de foto. El texto también quedó copiado, por si necesitás pegarlo.', null);
+    }).catch(function () { flash('No se pudo generar la imagen. Probá de nuevo.', 4000); });
+  }
+
   // Registra el certificado en Firestore (lo exige LinkedIn para "Mostrar credencial")
   function registerCertificate() {
     var c = state.certificate;
@@ -341,7 +387,7 @@
         doc.save('Certificado-guia-prompting-' + who + '.pdf');
         renderCert();
         var li = linkedinUrl();
-        if (li) showBanner('¡Felicitaciones! Tu certificado se descargó. ¿Lo sumás a tu perfil?', null, 'Agregar a LinkedIn', function () { window.open(li, '_blank', 'noopener'); });
+        if (li) showBanner('¡Felicitaciones! Tu certificado se descargó. ¿Lo sumás a tu perfil de LinkedIn?', null, 'Agregar a mi perfil', function () { window.open(li, '_blank', 'noopener'); });
         else flash('¡Felicitaciones! Tu certificado se descargó.', 4500);
       }).catch(function () { flash('No se pudo generar el certificado. Revisá la conexión y probá de nuevo.', 5000); });
     });
@@ -799,7 +845,8 @@
     'copy': copyPrompt,
     'edit-guide': startEditor,
     'finish': toggleFinish,
-    'certificate': downloadCertificate
+    'certificate': downloadCertificate,
+    'share-linkedin': shareLinkedIn
   };
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-action]');

@@ -34,6 +34,8 @@ npm run pdf
 
 **Después de cambiar algo en `src/`:** `npm run build`.
 
+**Imágenes de vista previa al compartir enlaces** (`site/assets/og-*.png`): `node scripts/generar-og.js`.
+
 **Agregar una cuenta docente:** sumar el email en `site/js/firebase-config.js` (`GUIA_ADMINS`) y en `firestore.rules` (función `isAdmin`), y publicar las reglas en Firebase.
 
 ## Probar en local

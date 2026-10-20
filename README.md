@@ -1,25 +1,45 @@
-# CODING AGENTS: READ THIS FIRST
+# Guía práctica de prompting · ST Relaciones Públicas
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Cuaderno de trabajo web del curso de Claude y Codex. Los alumnos leen la guía, ingresan con Google, completan los ejercicios y marcan los capítulos terminados. La docente sigue el avance de cada alumno y puede editar textos, videos y enlaces desde la misma página.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+- **Sitio:** https://guia-prompting-st.netlify.app
+- **Panel de seguimiento:** https://guia-prompting-st.netlify.app/admin.html
+- **Firebase:** proyecto `guia-de-prompting` (login con Google y base de datos Firestore)
 
-## What you should do — IMPORTANT
+## Qué hay en cada carpeta
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+| Carpeta / archivo | Qué es |
+|---|---|
+| `site/` | **El sitio que se publica en Netlify.** HTML, CSS y JS sin build: se sube la carpeta tal cual. |
+| `site/js/firebase-config.js` | Conexión con Firebase y emails de las cuentas docentes. |
+| `site/guia-practica-de-prompting.pdf` | El PDF descargable de la guía (se genera con `npm run pdf`). |
+| `src/` | Código que se compila a `site/js/backend.js` (Firebase) y `site/js/pdf-avance.js` (PDF "Mi avance"). |
+| `scripts/` | Generar el PDF y marcar campos o bloques editables nuevos en la guía. |
+| `firestore.rules` | Reglas de seguridad de Firestore. Se copian a mano en la consola de Firebase. |
+| `CONFIGURAR-LOGIN.md` | Paso a paso de Firebase y uso del modo edición. |
+| `project/` | Exportación original de Claude Design (referencia de diseño). |
 
-**Read `project/Guia Practica de Prompting Web.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Tareas frecuentes
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+**Publicar cambios:** subir la carpeta `site/` en Netlify → proyecto `guia-prompting-st` → Deploys (arrastrar la carpeta).
 
-## About the design files
+**Regenerar el PDF después de editar la guía** (incluye las ediciones publicadas desde la web):
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+```
+npm install
+npm run pdf
+```
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+**Después de cambiar algo en `src/`:** `npm run build`.
 
-## Bundle contents
+**Agregar una cuenta docente:** sumar el email en `site/js/firebase-config.js` (`GUIA_ADMINS`) y en `firestore.rules` (función `isAdmin`), y publicar las reglas en Firebase.
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Guía práctica de prompting completa` project files (HTML prototypes, assets, components)
+## Probar en local
+
+```
+npm install
+npm run emulators          # Firebase local (necesita Java)
+cd site && python3 -m http.server 8765
+```
+
+Con un `firebase-config.js` cuyo `projectId` empiece con `demo-`, el sitio usa los emuladores en vez del proyecto real.

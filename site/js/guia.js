@@ -52,18 +52,186 @@
     return c[2];
   }
 
-  function currentIndex() {
-    var idx = -1;
-    sections.forEach(function (el, i) { if (el && el.getBoundingClientRect().top <= LINE) idx = i; });
-    return idx;
-  }
+  // En la vista de curso se ve un capítulo por pantalla: el actual es el que está abierto
+  function currentIndex() { return view; }
   function offsetIn(idx) {
     return window.scrollY - (sections[idx].getBoundingClientRect().top + window.scrollY);
   }
   function goTo(target) {
     var el = sections[target.idx];
     if (!el) return;
-    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY + (target.delta || 0), behavior: 'smooth' });
+    if (openIdx(target.idx) !== view) { history.pushState(null, '', '#' + IDS[target.idx]); show(target.idx, true); }
+    var top = target.delta > 0 && view >= 0 ? el.getBoundingClientRect().top + window.scrollY + target.delta : 0;
+    window.scrollTo({ top: top, behavior: 'instant' });
+  }
+
+  // ---- Vista de curso: "Mi curso" con los módulos y un capítulo por pantalla ----
+  // Solo cambia la pantalla: al imprimir (y en el PDF de la guía) se ve todo seguido.
+  var IDS = CHAPTERS.map(function (c) { return c[0]; });
+  var HOME = { '': 1, portada: 1, inicio: 1, indice: 1 };
+  var view = -1; // capítulo abierto; -1 = inicio
+  body.classList.add('lms');
+
+  function openIdx(i) { return IDS[i] === 'indice' ? -1 : i; } // el índice vive en el inicio
+  function show(idx, focus) {
+    view = openIdx(idx);
+    body.classList.toggle('view-home', view < 0);
+    body.classList.toggle('view-chapter', view >= 0);
+    sections.forEach(function (s, i) { if (s) s.classList.toggle('is-open', i === view); });
+    document.title = (view >= 0 ? label(view) + ' — ' : '') + 'Guía práctica de prompting';
+    renderCourse();
+    if (focus && view >= 0) {
+      var h = sections[view].querySelector('h2');
+      if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+    }
+  }
+  function route(e) {
+    var h = decodeURIComponent(location.hash.slice(1)), i = IDS.indexOf(h), el;
+    if (HOME[h] || i >= 0) {
+      show(HOME[h] ? -1 : i, !!e);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if ((el = document.getElementById(h))) {
+      // Enlace a algo de adentro de un capítulo (un video, el certificado…): se abre ese capítulo
+      var sec = el.closest('main>section[id]');
+      show(sec ? IDS.indexOf(sec.id) : -1, false);
+      el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    } else show(-1);
+    track();
+  }
+
+  function modStatus(id) {
+    if (state.finished[id]) return 'done';
+    var f = chapterFields(id);
+    return f.done > 0 || (state.last && IDS[state.last.idx] === id) ? 'doing' : 'todo';
+  }
+  function chipLabel(c) {
+    return /\d/.test(c[1]) ? 'Cap. ' + c[1] : (c[1] !== '·' ? 'Anexo ' + c[1] : 'Intro');
+  }
+  // Próximo paso: donde quedó, si no lo terminó; si no, el primer módulo sin terminar
+  function nextStep() {
+    var l = state.last && state.last.idx;
+    if (l > 0 && !state.finished[IDS[l]]) return l;
+    for (var i = 1; i < CHAPTERS.length; i++) if (!state.finished[IDS[i]]) return i;
+    return -1;
+  }
+
+  // Temas del índice impreso (Intención, Diseño…) para las tarjetas
+  var topics = {};
+  $$('#indice a[href^="#"]').forEach(function (a) {
+    var t = a.nextElementSibling;
+    if (t && t.tagName === 'SPAN') topics[a.getAttribute('href').slice(1)] = { title: a.textContent.trim(), tag: t.textContent.trim() };
+  });
+
+  var course = null, side = null, sideItems = [];
+  function buildCourse() {
+    var main = document.querySelector('main');
+    course = document.createElement('div');
+    course.id = 'curso';
+    course.className = 'course';
+    course.setAttribute('data-noprint', '');
+    course.innerHTML = '<div class="course__head"><div><span class="course__eyebrow">MI CURSO</span><h2 class="course__title">Tu recorrido</h2>' +
+      '<p class="course__lead">Avanzá a tu ritmo: abrí un módulo, leelo, completá los ejercicios y marcalo como terminado.</p></div>' +
+      '<div class="course__stat"><strong class="js-course-count"></strong><span>de ' + FINISHABLE.length + ' módulos terminados</span>' +
+      '<div class="course__bar"><span class="js-course-bar"></span></div></div></div>' +
+      '<a class="st-btn st-btn--lg course__go" id="course-go" href="#"></a>';
+    [['Para empezar', 0, 3], ['Capítulos', 3, 15], ['Anexos', 15, 18]].forEach(function (g) {
+      var h = document.createElement('h3');
+      h.className = 'course__group';
+      h.textContent = g[0];
+      var ol = document.createElement('ol');
+      ol.className = 'course__grid';
+      for (var i = g[1]; i < g[2]; i++) {
+        var c = CHAPTERS[i];
+        if (c[0] === 'indice') continue;
+        var t = topics[c[0]] || {};
+        var li = document.createElement('li');
+        li.innerHTML = '<a class="mod" href="#' + c[0] + '"><span class="mod__chip"></span><span class="mod__title"></span>' +
+          '<span class="mod__meta"></span><span class="mod__status"></span></a>';
+        li.querySelector('.mod__chip').textContent = chipLabel(c) + (t.tag && t.tag !== 'Anexo' ? ' · ' + t.tag : '');
+        li.querySelector('.mod__title').textContent = t.title || c[2];
+        li.firstChild.setAttribute('data-mod', c[0]);
+        ol.appendChild(li);
+      }
+      course.appendChild(h);
+      course.appendChild(ol);
+    });
+    main.insertBefore(course, main.firstChild);
+
+    // Barra lateral con los módulos (en pantallas anchas)
+    side = document.createElement('nav');
+    side.className = 'lms-side';
+    side.setAttribute('aria-label', 'Módulos del curso');
+    side.setAttribute('data-noprint', '');
+    side.innerHTML = '<a class="lms-side__home" href="#inicio">← Mi curso</a>' +
+      '<div class="lms-side__stat"><span class="js-course-text"></span><div class="course__bar"><span class="js-course-bar"></span></div></div>';
+    var ul = document.createElement('ol');
+    ul.className = 'lms-side__list';
+    FINISHABLE.forEach(function (c) {
+      var li = document.createElement('li');
+      li.innerHTML = '<a href="#' + c[0] + '"><span class="lms-side__mark" aria-hidden="true"></span><span class="lms-side__num"></span><span></span></a>';
+      li.querySelector('.lms-side__num').textContent = c[1] === '·' ? '' : c[1];
+      li.querySelector('a').lastChild.textContent = c[2];
+      ul.appendChild(li);
+      sideItems.push(li.firstChild);
+    });
+    side.appendChild(ul);
+    document.querySelector('header').insertAdjacentElement('afterend', side);
+
+    // Arriba de cada capítulo: volver al curso y en qué módulo estás. Abajo: anterior / siguiente
+    FINISHABLE.forEach(function (c, n) {
+      var sec = $(c[0]);
+      var top = document.createElement('div');
+      top.className = 'lms-top';
+      top.setAttribute('data-noprint', '');
+      top.innerHTML = '<a href="#inicio">← Mi curso</a><span>Módulo ' + (n + 1) + ' de ' + FINISHABLE.length + '</span>';
+      sec.insertBefore(top, sec.firstChild);
+      var nav = document.createElement('nav');
+      nav.className = 'lms-nav';
+      nav.setAttribute('aria-label', 'Navegación entre módulos');
+      nav.setAttribute('data-noprint', '');
+      var prev = FINISHABLE[n - 1], next = FINISHABLE[n + 1];
+      nav.innerHTML = (prev ? '<a class="lms-nav__prev" href="#' + prev[0] + '"><small>← Anterior</small><span></span></a>' : '<a class="lms-nav__prev" href="#inicio"><small>← Volver</small><span>Mi curso</span></a>') +
+        (next ? '<a class="lms-nav__next" href="#' + next[0] + '"><small>Siguiente →</small><span></span></a>' : '<a class="lms-nav__next" href="#inicio"><small>Terminaste el recorrido</small><span>Volver a Mi curso</span></a>');
+      if (prev) nav.querySelector('.lms-nav__prev span').textContent = prev[2];
+      if (next) nav.querySelector('.lms-nav__next span').textContent = next[2];
+      sec.appendChild(nav);
+    });
+  }
+
+  function renderCourse() {
+    if (!course) return;
+    var n = finishedCount(), total = FINISHABLE.length;
+    $$('.js-course-count').forEach(function (el) { el.textContent = n; });
+    $$('.js-course-text').forEach(function (el) { el.textContent = n + ' de ' + total + ' terminados'; });
+    $$('.js-course-bar').forEach(function (el) { el.style.width = (n / total * 100).toFixed(1) + '%'; });
+    $$('[data-mod]').forEach(function (a) {
+      var id = a.getAttribute('data-mod'), st = modStatus(id), f = chapterFields(id);
+      a.className = 'mod is-' + st;
+      a.querySelector('.mod__meta').textContent = f.total ? f.done + ' de ' + f.total + ' ejercicios' : 'Lectura';
+      a.querySelector('.mod__status').textContent = st === 'done' ? '✓ Completado' : st === 'doing' ? 'En curso' : 'Pendiente';
+    });
+    sideItems.forEach(function (a, k) {
+      var id = FINISHABLE[k][0];
+      a.classList.toggle('is-current', IDS[view] === id);
+      if (IDS[view] === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      a.classList.toggle('is-done', !!state.finished[id]);
+      a.firstChild.textContent = state.finished[id] ? '✓' : '';
+    });
+    var go = $('course-go'), next = nextStep(), heroGo = document.querySelector('#portada a[href^="#"]:not(.st-btn)');
+    if (heroGo) {
+      heroGo.textContent = next < 0 ? 'Ver mi recorrido' : (n > 0 || (state.last && state.last.idx > 0) ? 'Continuar el curso →' : 'Empezar el curso →');
+      heroGo.setAttribute('href', next < 0 ? '#curso' : '#' + IDS[next]);
+    }
+    if (next < 0) {
+      go.textContent = 'Descargar mi certificado';
+      go.setAttribute('href', '#inicio');
+      go.setAttribute('data-action', 'certificate');
+    } else {
+      var started = n > 0 || (state.last && state.last.idx > 0);
+      go.textContent = (started ? 'Continuar: ' : 'Empezar el curso: ') + shortLabel(next) + (/\d/.test(CHAPTERS[next][1]) || CHAPTERS[next][1] !== '·' ? ' · ' + CHAPTERS[next][2] : '') + ' →';
+      go.setAttribute('href', '#' + IDS[next]);
+      go.removeAttribute('data-action');
+    }
   }
 
   // ---- Índice lateral ----
@@ -78,6 +246,10 @@
     list.appendChild(a);
     return a;
   });
+  // El índice es el inicio del curso
+  items[0].href = '#inicio';
+  items[0].children[0].textContent = '⌂';
+  items[0].children[1].textContent = 'Mi curso';
 
   function renderDrawer() {
     var bm = state.bookmark ? state.bookmark.idx : -1;
@@ -135,12 +307,17 @@
 
   // ---- Seguimiento de lectura ----
   function track() {
-    var doc = document.documentElement, max = doc.scrollHeight - window.innerHeight;
-    var pct = max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0;
+    // Barra superior: cuánto leíste del capítulo abierto
+    var frac = 0;
+    if (view >= 0) {
+      var el = sections[view], span = el.offsetHeight - window.innerHeight + 120;
+      frac = span > 0 ? Math.min(1, Math.max(0, -el.getBoundingClientRect().top / span)) : 1;
+    }
+    var pct = view >= 0 ? (view + frac) / CHAPTERS.length * 100 : 0;
     state.current = currentIndex();
     state.maxIdx = Math.max(state.maxIdx, state.current);
     state.maxPct = Math.max(state.maxPct, pct);
-    $('progress-bar').style.width = pct.toFixed(1) + '%';
+    $('progress-bar').style.width = (frac * 100).toFixed(1) + '%';
     if (!drawer.hidden) renderDrawer();
     if (state.current >= 0) {
       state.last = { idx: state.current, delta: offsetIn(state.current) };
@@ -201,6 +378,7 @@
       btn.setAttribute('aria-pressed', done ? 'true' : 'false');
     });
     renderCert();
+    renderCourse();
   }
   // ---- Certificado de finalización (al marcar los 17) ----
   function allFinished() { return finishedCount() === FINISHABLE.length; }
@@ -847,6 +1025,7 @@
       if (a) a(); else if (t) goTo(t);
     },
     'dismiss-banner': hideBanner,
+    'top': function () { window.scrollTo({ top: 0, behavior: 'smooth' }); },
     'login': function () { closeDrawer(false); login(); },
     'logout': logout,
     'account-menu': function () { if (menu.hidden) openMenu(); else closeMenu(); },
@@ -894,11 +1073,10 @@
   state.certificate = saved.certificate || null;
   buildFinishCards();
   buildCertCard(); // va después del "¿Terminaste?" del glosario
+  buildCourse(); // "Continuar" del inicio reemplaza al aviso de "La última vez llegaste a…"
   renderCert();
-  var resumeFrom = saved.bookmark || saved.last;
-  if (resumeFrom && resumeFrom.idx > 0 && !location.hash) {
-    showBanner((saved.bookmark ? 'Marcaste hasta: ' : 'La última vez llegaste a: ') + label(resumeFrom.idx), resumeFrom);
-  }
+  route();
+  window.addEventListener('hashchange', route);
   startBackend();
   setTimeout(track, 300);
 })();

@@ -209,7 +209,7 @@
   }
   function currentSection() {
     var cur = null;
-    Array.prototype.forEach.call(document.querySelectorAll('section[id]'), function (sec) { if (sec.getBoundingClientRect().top <= 140) cur = sec; });
+    Array.prototype.forEach.call(document.querySelectorAll('section[id]'), function (sec) { if (sec.getClientRects().length && sec.getBoundingClientRect().top <= 140) cur = sec; });
     return cur;
   }
   function syncSection() {
@@ -276,8 +276,8 @@
     document.body.appendChild(bar);
     makeDraggable();
     bar.querySelector('.ed-jump').addEventListener('change', function (e) {
-      var sec = document.getElementById(e.target.value);
-      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // En la vista de curso cada capítulo es una pantalla: se navega con el enlace
+      if (document.getElementById(e.target.value)) location.hash = e.target.value;
     });
     var t = null;
     window.addEventListener('scroll', function () { if (!t) t = setTimeout(function () { t = null; syncSection(); }, 150); }, { passive: true });

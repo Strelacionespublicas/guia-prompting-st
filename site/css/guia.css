@@ -288,3 +288,72 @@ body:not(.edit-mode) .edit-only{display:none!important}
   .media__frame,.edit-only,.ed-bar{display:none!important}
   .media{border-color:#C3C9C4}
 }
+
+/* ---- Vista de curso (solo pantalla): "Mi curso" + un capítulo por pantalla ---- */
+@media screen{
+  body.lms main>section{display:none}
+  body.lms.view-home main>#indice,body.lms.view-chapter main>section.is-open{display:block}
+  body.lms.view-chapter #portada,body.lms.view-chapter #curso{display:none}
+  /* En el inicio, del índice impreso queda solo la tabla de videos (los módulos ya están en tarjetas) */
+  body.lms.view-home #indice>[data-edit="indice-e1"],body.lms.view-home #indice>[data-edit="indice-e2"],body.lms.view-home #indice>[data-edit="indice-e3"]{display:none}
+  body.lms.view-home #indice{padding-top:40px!important}
+  body.lms.view-home #indice>h3{margin-top:0!important}
+  body.lms .hero{padding-top:clamp(32px,6vw,72px)!important;padding-bottom:clamp(28px,4vw,48px)!important}
+  body.lms main>section{padding-top:20px!important}
+  /* Portada más compacta, para que "Mi curso" se vea enseguida (IDEA se explica en el capítulo 2) */
+  body.lms .hero h1{font-size:clamp(36px,6vw,64px)!important;margin-top:12px!important}
+  body.lms .hero h1+p{margin-top:16px!important}
+  body.lms .hero>div[style*="height:4px"]{margin:20px 0!important}
+  body.lms .hero>div[style*="grid-template-columns"]{display:none!important}
+}
+.course{padding-top:clamp(32px,6vw,56px)}
+.course__head{display:flex;flex-wrap:wrap;gap:20px 32px;align-items:flex-end;justify-content:space-between}
+.course__eyebrow{font:600 12px/1 Inter,sans-serif;letter-spacing:.12em;color:#D32B36}
+.course__title{font-size:clamp(26px,4.4vw,34px);margin:10px 0 8px}
+.course__lead{max-width:520px;color:#4D5759;margin:0}
+.course__stat{min-width:220px;flex:0 1 260px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font:500 14px/1.3 Inter,sans-serif;color:#4D5759}
+.course__stat strong{font:800 40px/1 Inter,sans-serif;color:#012C3D}
+.course__bar{flex:1 1 100%;height:8px;border-radius:999px;background:#EDEFE8;overflow:hidden;margin-top:6px}
+.course__bar span{display:block;height:100%;width:0;background:#1F8A5B;border-radius:999px;transition:width .3s}
+.course__go{margin-top:24px;max-width:100%;box-sizing:border-box;text-align:center;line-height:1.3}
+.course__go:hover{text-decoration:none;color:#fff}
+.course__group{font:700 13px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5CA8AF;margin:36px 0 12px}
+.course__grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.course__grid li{margin:0}
+.mod{position:relative;display:flex;flex-direction:column;gap:8px;height:100%;box-sizing:border-box;padding:16px 16px 14px;background:#fff;border:1px solid #DDE1DB;border-radius:12px;color:#012C3D;transition:border-color .15s,box-shadow .15s,transform .15s}
+.mod:hover{text-decoration:none;color:#012C3D;border-color:#78BDC4;box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.mod__chip{font:700 11px/1.2 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#D32B36}
+.mod__title{font:700 16px/1.3 Inter,sans-serif;flex:1}
+.mod__meta{font-size:13px;color:#6F7A7C}
+.mod__status{align-self:flex-start;font:700 12px/1 Inter,sans-serif;padding:6px 10px;border-radius:999px;background:#EDEFE8;color:#4D5759}
+.mod.is-doing{border-color:#E0A33A}
+.mod.is-doing .mod__status{background:#FBF1DD;color:#8A5A0B}
+.mod.is-done{background:#F6FBF8;border-color:#BFE3D0}
+.mod.is-done .mod__status{background:#E4F3EC;color:#1F8A5B}
+
+.lms-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:clamp(20px,4vw,36px);padding-bottom:12px;border-bottom:1px solid #EDEFE8;font:600 13px/1.3 Inter,sans-serif;color:#6F7A7C}
+.lms-top a{color:#012C3D}
+.lms-nav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.lms-nav a{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid #DDE1DB;border-radius:12px;color:#012C3D;font:700 15px/1.3 Inter,sans-serif;background:#fff}
+.lms-nav a:hover{text-decoration:none;border-color:#78BDC4;color:#012C3D}
+.lms-nav small{font:600 12px/1 Inter,sans-serif;color:#6F7A7C}
+.lms-nav__next{text-align:right;align-items:flex-end;grid-column:2}
+.lms-nav__next{background:#012C3D!important;border-color:#012C3D!important;color:#fff!important}
+.lms-nav__next small{color:#A7D5DA}
+@media (max-width:520px){.lms-nav{grid-template-columns:1fr}.lms-nav__next{grid-column:1;grid-row:1}}
+
+.lms-side{display:none}
+@media screen and (min-width:1180px){
+  body.lms.view-chapter .lms-side{display:flex;flex-direction:column;position:fixed;z-index:10;top:var(--header-h,61px);left:0;bottom:0;width:272px;box-sizing:border-box;padding:18px 0 24px;background:#F7F8F3;border-right:1px solid #DDE1DB;overflow-y:auto}
+  body.lms.view-chapter main{margin-left:max(300px,calc(50vw - 340px))!important}
+  body.lms.view-chapter footer>div{padding-left:300px!important}
+}
+.lms-side__home{margin:0 20px 14px;font:600 14px/1.3 Inter,sans-serif;color:#012C3D}
+.lms-side__stat{margin:0 20px 12px;font:500 12px/1 Inter,sans-serif;color:#4D5759}
+.lms-side__list{list-style:none;margin:0;padding:0}
+.lms-side__list li{margin:0}
+.lms-side__list a{display:grid;grid-template-columns:20px 22px minmax(0,1fr);gap:6px;align-items:baseline;padding:8px 20px;font:500 14px/1.35 Karla,sans-serif;color:#012C3D}
+.lms-side__list a:hover{background:#EDEFE8;text-decoration:none;color:#012C3D}
+.lms-side__list a.is-current{background:#DCEEF0;font-weight:700;box-shadow:inset 3px 0 0 #F8444F}
+.lms-side__mark{font:700 13px/1 Inter,sans-serif;color:#1F8A5B}
+.lms-side__num{font:700 12px/1 Inter,sans-serif;color:#5CA8AF}

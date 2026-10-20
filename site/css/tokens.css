@@ -1,6 +1,6 @@
 /* ST Relaciones Públicas — design tokens (copiados del design system v1.0) */
-@font-face{font-family:'Inter';src:url('../fonts/inter.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:'Karla';src:url('../fonts/karla.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Inter';src:url('../fonts/inter-v2.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Karla';src:url('../fonts/karla-v2.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
 :root {
   --st-petroleo:      #012C3D;
   --st-celeste:       #78BDC4;

@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 const SITE = path.join(__dirname, '..', 'site');
 const base = 'file://' + SITE + '/';
 // El logo va incrustado: una página creada con setContent no puede leer imágenes del disco
-const FONT = (n) => 'data:font/woff2;base64,' + require('fs').readFileSync(path.join(SITE, 'fonts', n + '.woff2')).toString('base64');
+const FONT = (n) => 'data:font/woff2;base64,' + require('fs').readFileSync(path.join(SITE, 'fonts', n + '-v2.woff2')).toString('base64');
 const LOGO = 'data:image/png;base64,' + require('fs').readFileSync(path.join(SITE, 'assets', 'logo-coral.png')).toString('base64');
 
 const css = `

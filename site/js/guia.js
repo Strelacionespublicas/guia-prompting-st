@@ -219,6 +219,7 @@
     });
     var go = $('course-go'), next = nextStep(), heroGo = document.querySelector('#portada a[href^="#"]:not(.st-btn)');
     if (heroGo) {
+      heroGo.classList.add('hero-go');
       heroGo.textContent = next < 0 ? 'Ver mi recorrido' : (n > 0 || (state.last && state.last.idx > 0) ? 'Continuar el curso →' : 'Empezar el curso →');
       heroGo.setAttribute('href', next < 0 ? '#curso' : '#' + IDS[next]);
     }

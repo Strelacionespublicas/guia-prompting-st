@@ -305,6 +305,10 @@ body:not(.edit-mode) .edit-only{display:none!important}
   body.lms .hero h1+p{margin-top:16px!important}
   body.lms .hero>div[style*="height:4px"]{margin:20px 0!important}
   body.lms .hero>div[style*="grid-template-columns"]{display:none!important}
+  /* La acción principal es avanzar en el curso; el PDF queda como secundaria */
+  body.lms .hero-go{order:-1;height:52px!important;padding:0 30px!important;border-radius:999px!important;background:#F8444F!important;border-color:#F8444F!important;color:#fff!important;font-size:var(--fs-lg)!important;box-shadow:var(--shadow-coral)}
+  body.lms .hero-go:hover{text-decoration:none;filter:brightness(1.06)}
+  body.lms #portada a.st-btn[download]{background:transparent;color:#012C3D;border-color:#012C3D;box-shadow:none}
 }
 .course{padding-top:clamp(32px,6vw,56px)}
 .course__head{display:flex;flex-wrap:wrap;gap:20px 32px;align-items:flex-end;justify-content:space-between}

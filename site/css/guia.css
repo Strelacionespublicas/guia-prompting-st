@@ -395,3 +395,5 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 .caso__cmp--good{background:#E4F3EC}.caso__cmp--good>strong:first-child{color:#1F8A5B}
 .caso__nota{margin:0 0 12px;padding:12px 16px;border-radius:8px;background:#012C3D;color:#DCEEF0;font:500 14px/1.6 ui-monospace,Menlo,Consolas,monospace}
 @media print{.caso{background:#fff;border:1px solid #F8444F;border-left-width:5px}.caso__fig img{max-height:90mm;width:auto;max-width:100%}}
+.caso__clave{margin:16px 0 0!important;padding:12px 14px;border-radius:8px;background:#fff;border:1px solid #F8D3CF}
+.caso__fig{max-width:720px}

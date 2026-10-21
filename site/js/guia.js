@@ -20,7 +20,7 @@
     ['checklist', 'A', 'Checklist general'], ['laboratorio', 'B', 'Laboratorio de prompts'], ['glosario', 'C', 'Glosario'],
     // Laboratorios optativos: van al final para no mover los índices guardados (marcador, último lugar)
     ['lab-proyecto', 'D', 'Proyecto guiado: inscripción con cupos', 'opt'], ['lab-trabado', 'E', 'Cuando te trabás', 'opt'],
-    ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt']
+    ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt'], ['lab-publicar', 'G', 'Publicar tu proyecto', 'opt']
   ];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -856,6 +856,20 @@
     }, function () { flash('No se pudo copiar. Probá de nuevo.'); });
   }
 
+  // Carruseles de capturas: en el celular se deslizan; con mouse, flechas
+  function buildCarruseles() {
+    $$('.carrusel').forEach(function (c) {
+      var pista = c.querySelector('.carrusel__pista');
+      var nav = document.createElement('div');
+      nav.className = 'carrusel__nav';
+      nav.setAttribute('data-noprint', '');
+      nav.innerHTML = '<button type="button" aria-label="Captura anterior">←</button><button type="button" aria-label="Captura siguiente">→</button>';
+      nav.children[0].addEventListener('click', function () { pista.scrollBy({ left: -pista.clientWidth * 0.8, behavior: 'smooth' }); });
+      nav.children[1].addEventListener('click', function () { pista.scrollBy({ left: pista.clientWidth * 0.8, behavior: 'smooth' }); });
+      c.appendChild(nav);
+    });
+  }
+
   function buildRedes() {
     var box = $('redes'), c = window.GUIA_CONTACTO || {};
     if (!box) return;
@@ -1243,6 +1257,7 @@
   buildFields();
   buildCopyAnswers();
   buildRedes();
+  buildCarruseles();
   setEditable(false);
   var saved = load();
   state.maxIdx = typeof saved.maxIdx === 'number' ? saved.maxIdx : -1;

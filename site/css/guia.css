@@ -423,3 +423,8 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 .red:hover{background:#fff;color:#012C3D;text-decoration:none}
 .red--wa{background:#1F8A5B;border-color:#1F8A5B}
 .red b{font:800 12px/1 Inter,sans-serif}
+
+/* Laboratorios optativos: aparte del recorrido del certificado */
+.course__note{display:block;margin-top:6px;font:400 14px/1.4 Karla,sans-serif;letter-spacing:0;text-transform:none;color:#6F7A7C}
+.lms-side__sep{margin:14px 20px 4px;padding-top:12px;border-top:1px solid #DDE1DB;font:700 11px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6F7A7C}
+.drawer-sep{margin:12px 20px 4px;padding-top:12px;border-top:1px solid #DDE1DB;font:700 11px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6F7A7C}

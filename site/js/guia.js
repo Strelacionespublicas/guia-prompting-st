@@ -17,11 +17,17 @@
     ['cap4', '04', 'El contexto'], ['cap5', '05', 'Archivos y referencias'], ['cap6', '06', 'Promptear por voz'],
     ['cap7', '07', 'Trabajar con Claude y Codex'], ['cap8', '08', 'Construir herramientas reales'], ['cap9', '09', 'Iterar y corregir'],
     ['cap10', '10', 'Reducir iteraciones y tokens'], ['cap11', '11', 'Pruebas, seguridad y publicación'], ['cap12', '12', 'Mi proyecto paso a paso'],
-    ['checklist', 'A', 'Checklist general'], ['laboratorio', 'B', 'Laboratorio de prompts'], ['glosario', 'C', 'Glosario']
+    ['checklist', 'A', 'Checklist general'], ['laboratorio', 'B', 'Laboratorio de prompts'], ['glosario', 'C', 'Glosario'],
+    // Laboratorios optativos: van al final para no mover los índices guardados (marcador, último lugar)
+    ['lab-proyecto', 'D', 'Proyecto guiado: inscripción con cupos', 'opt'], ['lab-trabado', 'E', 'Cuando te trabás', 'opt'],
+    ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt']
   ];
 
   var $ = function (id) { return document.getElementById(id); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+  // Un laboratorio optativo aparece solo cuando su sección ya está en la guía
+  CHAPTERS = CHAPTERS.filter(function (c) { return !c[3] || $(c[0]); });
+  function isOpt(i) { return !!(CHAPTERS[i] && CHAPTERS[i][3]); }
   var body = document.body;
   var drawer = $('drawer'), list = $('drawer-list'), banner = $('banner'), menu = $('account-menu');
   var toggleBtn = document.querySelector('[data-action="toggle-drawer"]');
@@ -29,8 +35,9 @@
   var sections = CHAPTERS.map(function (c) { return $(c[0]); });
 
   var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, certificate: null, bannerTarget: null };
-  // Capítulos y anexos que se marcan como terminados (todo menos el índice)
-  var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice'; });
+  // Capítulos y anexos que cuentan para el certificado (todo menos el índice y los optativos)
+  var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice' && !c[3]; });
+  var OPTIONAL = CHAPTERS.filter(function (c) { return c[3]; });
   var flashTimer = null, raf = null, lastFocus = null;
 
   // ---- Almacenamiento local ----
@@ -110,8 +117,8 @@
   // Próximo paso: donde quedó, si no lo terminó; si no, el primer módulo sin terminar
   function nextStep() {
     var l = state.last && state.last.idx;
-    if (l > 0 && !state.finished[IDS[l]]) return l;
-    for (var i = 1; i < CHAPTERS.length; i++) if (!state.finished[IDS[i]]) return i;
+    if (l > 0 && !isOpt(l) && !state.finished[IDS[l]]) return l;
+    for (var i = 1; i < CHAPTERS.length; i++) if (!isOpt(i) && !state.finished[IDS[i]]) return i;
     return -1;
   }
 
@@ -134,10 +141,18 @@
       '<div class="course__stat"><strong class="js-course-count"></strong><span>de ' + FINISHABLE.length + ' módulos terminados</span>' +
       '<div class="course__bar"><span class="js-course-bar"></span></div></div></div>' +
       '<a class="st-btn st-btn--lg course__go" id="course-go" href="#"></a>';
-    [['Para empezar', 0, 3], ['Capítulos', 3, 15], ['Anexos', 15, 18]].forEach(function (g) {
+    var groups = [['Para empezar', 0, 3], ['Capítulos', 3, 15], ['Anexos', 15, 18]];
+    if (OPTIONAL.length) groups.push(['Laboratorios optativos', 18, CHAPTERS.length, 'Para cuando los necesites: no cuentan para el certificado.']);
+    groups.forEach(function (g) {
       var h = document.createElement('h3');
       h.className = 'course__group';
       h.textContent = g[0];
+      if (g[3]) {
+        var note = document.createElement('span');
+        note.className = 'course__note';
+        note.textContent = g[3];
+        h.appendChild(note);
+      }
       var ol = document.createElement('ol');
       ol.className = 'course__grid';
       for (var i = g[1]; i < g[2]; i++) {
@@ -147,7 +162,7 @@
         var li = document.createElement('li');
         li.innerHTML = '<a class="mod" href="#' + c[0] + '"><span class="mod__chip"></span><span class="mod__title"></span>' +
           '<span class="mod__meta"></span><span class="mod__status"></span></a>';
-        li.querySelector('.mod__chip').textContent = chipLabel(c) + (t.tag && t.tag !== 'Anexo' ? ' · ' + t.tag : '');
+        li.querySelector('.mod__chip').textContent = chipLabel(c) + (c[3] ? ' · Optativo' : t.tag && t.tag !== 'Anexo' ? ' · ' + t.tag : '');
         li.querySelector('.mod__title').textContent = t.title || c[2];
         li.firstChild.setAttribute('data-mod', c[0]);
         ol.appendChild(li);
@@ -166,36 +181,47 @@
       '<div class="lms-side__stat"><span class="js-course-text"></span><div class="course__bar"><span class="js-course-bar"></span></div></div>';
     var ul = document.createElement('ol');
     ul.className = 'lms-side__list';
-    FINISHABLE.forEach(function (c) {
+    FINISHABLE.concat(OPTIONAL).forEach(function (c) {
+      if (c === OPTIONAL[0]) {
+        var sep = document.createElement('li');
+        sep.className = 'lms-side__sep';
+        sep.textContent = 'Optativos';
+        ul.appendChild(sep);
+      }
       var li = document.createElement('li');
       li.innerHTML = '<a href="#' + c[0] + '"><span class="lms-side__mark" aria-hidden="true"></span><span class="lms-side__num"></span><span></span></a>';
       li.querySelector('.lms-side__num').textContent = c[1] === '·' ? '' : c[1];
       li.querySelector('a').lastChild.textContent = c[2];
       ul.appendChild(li);
+      li.firstChild.setAttribute('data-side', c[0]);
       sideItems.push(li.firstChild);
     });
     side.appendChild(ul);
     document.querySelector('header').insertAdjacentElement('afterend', side);
 
     // Arriba de cada capítulo: volver al curso y en qué módulo estás. Abajo: anterior / siguiente
-    FINISHABLE.forEach(function (c, n) {
+    // (los optativos se recorren entre ellos, aparte del recorrido del certificado)
+    function addNav(chain, c, n) {
       var sec = $(c[0]);
       var top = document.createElement('div');
       top.className = 'lms-top';
       top.setAttribute('data-noprint', '');
-      top.innerHTML = '<a href="#inicio">← Mi curso</a><span>Módulo ' + (n + 1) + ' de ' + FINISHABLE.length + '</span>';
+      top.innerHTML = '<a href="#inicio">← Mi curso</a><span></span>';
+      top.lastChild.textContent = c[3] ? 'Laboratorio optativo · no cuenta para el certificado' : 'Módulo ' + (n + 1) + ' de ' + chain.length;
       sec.insertBefore(top, sec.firstChild);
       var nav = document.createElement('nav');
       nav.className = 'lms-nav';
       nav.setAttribute('aria-label', 'Navegación entre módulos');
       nav.setAttribute('data-noprint', '');
-      var prev = FINISHABLE[n - 1], next = FINISHABLE[n + 1];
+      var prev = chain[n - 1], next = chain[n + 1];
       nav.innerHTML = (prev ? '<a class="lms-nav__prev" href="#' + prev[0] + '"><small>← Anterior</small><span></span></a>' : '<a class="lms-nav__prev" href="#inicio"><small>← Volver</small><span>Mi curso</span></a>') +
-        (next ? '<a class="lms-nav__next" href="#' + next[0] + '"><small>Siguiente →</small><span></span></a>' : '<a class="lms-nav__next" href="#inicio"><small>Terminaste el recorrido</small><span>Volver a Mi curso</span></a>');
+        (next ? '<a class="lms-nav__next" href="#' + next[0] + '"><small>Siguiente →</small><span></span></a>' : '<a class="lms-nav__next" href="#inicio"><small>' + (c[3] ? 'Último laboratorio' : 'Terminaste el recorrido') + '</small><span>Volver a Mi curso</span></a>');
       if (prev) nav.querySelector('.lms-nav__prev span').textContent = prev[2];
       if (next) nav.querySelector('.lms-nav__next span').textContent = next[2];
       sec.appendChild(nav);
-    });
+    }
+    FINISHABLE.forEach(function (c, n) { addNav(FINISHABLE, c, n); });
+    OPTIONAL.forEach(function (c, n) { addNav(OPTIONAL, c, n); });
   }
 
   function renderCourse() {
@@ -210,8 +236,8 @@
       a.querySelector('.mod__meta').textContent = f.total ? f.done + ' de ' + f.total + (f.total === 1 ? ' actividad' : ' actividades') : 'Lectura';
       a.querySelector('.mod__status').textContent = st === 'done' ? '✓ Completado' : st === 'doing' ? 'En curso' : 'Pendiente';
     });
-    sideItems.forEach(function (a, k) {
-      var id = FINISHABLE[k][0];
+    sideItems.forEach(function (a) {
+      var id = a.getAttribute('data-side');
       a.classList.toggle('is-current', IDS[view] === id);
       if (IDS[view] === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       a.classList.toggle('is-done', !!state.finished[id]);
@@ -237,6 +263,12 @@
 
   // ---- Índice lateral ----
   var items = CHAPTERS.map(function (c) {
+    if (c === OPTIONAL[0]) {
+      var sep = document.createElement('div');
+      sep.className = 'drawer-sep';
+      sep.textContent = 'Laboratorios optativos';
+      list.appendChild(sep);
+    }
     var a = document.createElement('a');
     a.className = 'drawer-item';
     a.href = '#' + c[0];
@@ -386,6 +418,7 @@
       var sub = done ? 'Lo marcaste el ' + new Date(done).toLocaleDateString('es-AR') + '.' : '';
       if (!reading) sub = 'Empezaste ' + f.done + ' de ' + f.total + (f.total === 1 ? ' actividad' : ' actividades') + '. ' + sub;
       else if (!done) sub = 'Marcala para llevar la cuenta de tu avance.';
+      if (isOpt(i) && !done) sub += ' Es optativo: no cuenta para el certificado.';
       card.querySelector('.finish__sub').textContent = sub.trim();
       var btn = card.querySelector('button');
       btn.textContent = done ? 'Desmarcar' : (reading ? '✓ Marcar lectura finalizada' : '✓ Marcar como completado');
@@ -603,8 +636,10 @@
     if (!state.finished[id]) { flash('Desmarcado.'); return; }
     var ids = CHAPTERS.map(function (c) { return c[0]; }), i = ids.indexOf(id);
     var next = -1;
-    for (var j = i + 1; j < CHAPTERS.length; j++) if (!state.finished[CHAPTERS[j][0]]) { next = j; break; }
+    // Se sigue dentro del mismo recorrido: los obligatorios no mandan a un optativo, ni al revés
+    for (var j = i + 1; j < CHAPTERS.length; j++) if (isOpt(j) === isOpt(i) && !state.finished[CHAPTERS[j][0]]) { next = j; break; }
     var msg = '¡Bien! Llevás ' + finishedCount() + ' de ' + FINISHABLE.length + ' terminados.';
+    if (isOpt(i)) msg = '¡Bien! Laboratorio terminado.';
     if (next >= 0) showBanner(msg, { idx: next, delta: 0 }, 'Seguir con ' + shortLabel(next));
     else if (allFinished()) showBanner('¡Terminaste toda la guía! 🎉', null, 'Descargar mi certificado', downloadCertificate);
     else flash(msg, 4500);

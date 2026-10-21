@@ -62,6 +62,7 @@
     var p = u.progress || {};
     return (p.finishedCount || 0) + ' de ' + (p.finishedTotal || 17);
   }
+  function nov(u) { return !!(u.profile && u.profile.novedades && u.profile.novedades.acepta); }
   function name(u) { return (u.profile && u.profile.name) || (u.profile && u.profile.email) || 'Sin nombre'; }
 
   function renderStats() {
@@ -87,7 +88,7 @@
       var done = doneOf(u), p = pct(u);
       var where = (u.progress && u.progress.where) || '—';
       return '<tr tabindex="0" data-id="' + esc(u.id) + '">' +
-        '<td><div class="adm-name">' + esc(name(u)) + (cert(u) ? ' <span class="adm-cert" title="Certificado emitido">🎓</span>' : '') + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
+        '<td><div class="adm-name">' + esc(name(u)) + (cert(u) ? ' <span class="adm-cert" title="Certificado emitido">🎓</span>' : '') + (nov(u) ? ' <span class="adm-cert" title="Acepta recibir novedades">✉</span>' : '') + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
         '<td><div class="adm-meter"><span style="width:' + p + '%"></span></div><span class="adm-num">' + finished(u) + '</span></td>' +
         '<td>' + esc(where) + '</td>' +
         '<td><span class="adm-num">' + done + '</span> de ' + total + '</td>' +
@@ -129,12 +130,12 @@
 
   function csv() {
     var cell = function (v) { v = v === true ? 'Sí' : v === false || v == null ? '' : String(v); return '"' + v.replace(/"/g, '""') + '"'; };
-    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad', 'Certificado'].concat(order.map(function (id) { return labels[id]; }));
+    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad', 'Certificado', 'Acepta novedades'].concat(order.map(function (id) { return labels[id]; }));
     var lines = [head.map(cell).join(',')];
     users.forEach(function (u) {
       var d = lastActivity(u), f = u.fields || {};
       var c = cert(u);
-      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '', c ? c.code + ' (' + new Date(c.at).toLocaleDateString('es-AR') + ')' : '']
+      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '', c ? c.code + ' (' + new Date(c.at).toLocaleDateString('es-AR') + ')' : '', nov(u)]
         .concat(order.map(function (id) { return f[id]; })).map(cell).join(','));
     });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -179,6 +180,16 @@
   $('logout').addEventListener('click', function () { backend.signOut(); });
   $('refresh').addEventListener('click', refresh);
   $('csv').addEventListener('click', csv);
+  // Correos de quienes aceptaron recibir novedades, listos para pegar en "CCO"
+  $('emails-nov').addEventListener('click', function () {
+    var list = users.filter(nov).map(function (u) { return u.profile.email; }).filter(Boolean);
+    var btn = $('emails-nov');
+    if (!list.length) { btn.textContent = 'Nadie aceptó todavía'; setTimeout(function () { btn.textContent = 'Copiar correos (novedades)'; }, 2500); return; }
+    navigator.clipboard.writeText(list.join(', ')).then(function () {
+      btn.textContent = '✓ ' + list.length + (list.length === 1 ? ' correo copiado' : ' correos copiados');
+      setTimeout(function () { btn.textContent = 'Copiar correos (novedades)'; }, 2500);
+    });
+  });
   $('search').addEventListener('input', renderRows);
   $('rows').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr) openDetail(tr.dataset.id); });
   $('rows').addEventListener('keydown', function (e) { var tr = e.target.closest('tr[data-id]'); if (tr && e.key === 'Enter') openDetail(tr.dataset.id); });

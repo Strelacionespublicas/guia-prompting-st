@@ -42,3 +42,4 @@
 .adm-detail__body dd{margin:4px 0 0;white-space:pre-wrap;font-size:15px;line-height:1.5}
 .adm-check{color:#1F8A5B;font-weight:700}
 .adm-detail__cert{background:#E4F3EC;border:1px solid #1F8A5B;border-radius:8px;padding:10px 12px;font-size:14px;color:#1C2429}
+.st-btn--outline{background:#fff!important;color:#012C3D!important;box-shadow:inset 0 0 0 1px #C3C9C4!important}

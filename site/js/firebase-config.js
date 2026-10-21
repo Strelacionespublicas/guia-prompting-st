@@ -52,3 +52,10 @@ window.GUIA_CONTACTO = {
   tiktok: 'https://www.tiktok.com/@strelacionespublicas',
   youtube: ''
 };
+
+// Servicios de ST que se ofrecen al terminar la guía. Cada botón abre WhatsApp con el mensaje indicado.
+window.GUIA_SERVICIOS = [
+  { titulo: 'Mentoría 1 a 1', texto: 'Te acompaño a llevar tu proyecto de la idea a una herramienta que funcione, en encuentros personalizados.', mensaje: 'Hola, terminé la Guía práctica de prompting y quiero saber más sobre la mentoría 1 a 1.' },
+  { titulo: 'Lo construimos juntos', texto: 'Diseñamos e implementamos tu herramienta: formulario, cotizador, agenda o lo que tu negocio necesite.', mensaje: 'Hola, terminé la Guía práctica de prompting y quiero consultar por la implementación de una herramienta.' },
+  { titulo: 'Capacitación para equipos', texto: 'Talleres de IA aplicada para equipos de trabajo, empresas e instituciones.', mensaje: 'Hola, terminé la Guía práctica de prompting y quiero consultar por una capacitación para mi equipo.' }
+];

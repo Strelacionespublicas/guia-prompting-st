@@ -507,3 +507,24 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 .st-footer__legal{margin:18px 0 0;padding-top:14px;border-top:1px solid #DDE1DB;font-size:12px;line-height:1.5;color:#6F7A7C}
 .st-footer__legal a{color:#6F7A7C;text-decoration:underline}
 body.lms .st-footer{position:relative;z-index:1}
+
+/* Novedades y "Seguí con ST" */
+.account-menu__nov{margin-top:8px;width:100%;min-height:36px;padding:6px 10px;border:1px solid #C3C9C4;border-radius:8px;background:#fff;font:600 13px/1.25 Inter,sans-serif;color:#012C3D;cursor:pointer;text-align:center}
+.account-menu__nov[aria-pressed="true"]{background:#E4F3EC;border-color:#A9D8BF;color:#1F6B47}
+.ed-dlg__check{display:flex;gap:10px;align-items:flex-start;font:400 14px/1.45 Karla,sans-serif;color:#333C3F;margin:0 0 14px;cursor:pointer}
+.ed-dlg__check input{flex:none;width:18px;height:18px;margin-top:2px;accent-color:#F8444F}
+.seguir{margin:40px 0 8px;padding:clamp(22px,4vw,36px);border-radius:16px;background:#012C3D;color:#fff}
+.seguir__eyebrow{font:700 12px/1 Inter,sans-serif;letter-spacing:.14em;color:#78BDC4}
+.seguir__title{color:#fff;font-size:clamp(24px,4vw,32px);margin:10px 0 6px}
+.seguir__lead{color:#DCEEF0;margin:0 0 20px}
+.seguir__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.seguir__card{display:flex;flex-direction:column;background:#fff;color:#012C3D;border-radius:12px;padding:18px 18px 16px;border-top:4px solid #F8444F}
+.seguir__card h3{font-size:18px;margin:0 0 6px}
+.seguir__card p{font-size:14px;line-height:1.5;color:#4D5759;margin:0 0 14px;flex:1}
+.seguir__btn{font:700 14px/1.2 Inter,sans-serif;color:#D32B36}
+.seguir__novedades{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.15)}
+.seguir__novedades p{margin:0;color:#DCEEF0}
+.seguir__novedades[hidden]{display:none}
+body.lms #seguir-inicio{max-width:1120px;margin:24px auto 0}
+body:not(.cert-ready) #seguir-inicio,body.view-chapter #seguir-inicio{display:none}
+body.lms.view-home #seguir{display:none}

@@ -39,6 +39,7 @@
   var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice' && !c[3]; });
   var OPTIONAL = CHAPTERS.filter(function (c) { return c[3]; });
   var flashTimer = null, raf = null, lastFocus = null;
+  var novedades = null; // consentimiento para recibir novedades: { acepta, at }
 
   // ---- Almacenamiento local ----
   function load() {
@@ -429,6 +430,56 @@
   }
   // ---- Certificado de finalización (al marcar los 17) ----
   function allFinished() { return finishedCount() === FINISHABLE.length; }
+  // ---- Novedades (consentimiento expreso, revocable desde el menú de la cuenta) ----
+  function setNovedades(on, quiet) {
+    if (!canEdit()) { askLogin(); return; }
+    novedades = { acepta: !!on, at: Date.now() };
+    renderNovedades();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 300);
+    if (!quiet) flash(on ? '¡Listo! Te vamos a avisar de cursos, talleres y guías nuevas.' : 'Listo, no te vamos a enviar novedades.', 4000);
+  }
+  function renderNovedades() {
+    var on = !!(novedades && novedades.acepta);
+    $$('[data-action="novedades"]').forEach(function (b) {
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.textContent = on ? '✓ Recibís novedades · Darme de baja' : '✉ Quiero recibir novedades';
+    });
+    $$('.seguir__novedades').forEach(function (el) { el.hidden = on; });
+  }
+
+  // ---- Seguí con ST: los servicios, al terminar la guía ----
+  function buildSeguir() {
+    var serv = window.GUIA_SERVICIOS || [], wa = (window.GUIA_CONTACTO || {}).whatsapp;
+    if (!serv.length || !wa) return;
+    var make = function (id) {
+      var box = document.createElement('div');
+      box.className = 'seguir';
+      box.id = id;
+      box.setAttribute('data-noprint', '');
+      box.innerHTML = '<span class="seguir__eyebrow">¿Y AHORA?</span><h2 class="seguir__title">Seguí con ST Relaciones Públicas</h2>' +
+        '<p class="seguir__lead">Ya tenés el método. Si querés llevar tu proyecto más lejos, te acompaño.</p><div class="seguir__grid"></div>' +
+        '<div class="seguir__novedades" data-auth="in"><p>¿Querés enterarte de los próximos cursos, talleres y guías?</p>' +
+        '<button type="button" class="st-btn st-btn--md" data-action="novedades-si">✉ Quiero recibir novedades</button></div>';
+      var grid = box.querySelector('.seguir__grid');
+      serv.forEach(function (s) {
+        var card = document.createElement('div');
+        card.className = 'seguir__card';
+        card.innerHTML = '<h3></h3><p></p><a class="seguir__btn" target="_blank" rel="noopener">Consultá por WhatsApp →</a>';
+        card.querySelector('h3').textContent = s.titulo;
+        card.querySelector('p').textContent = s.texto;
+        card.querySelector('a').href = 'https://wa.me/' + String(wa).replace(/\D/g, '') + '?text=' + encodeURIComponent(s.mensaje || 'Hola, terminé la Guía práctica de prompting.');
+        grid.appendChild(card);
+      });
+      return box;
+    };
+    // Al final de la guía, siempre; en el inicio, solo cuando el certificado está listo
+    var cert = $('certificado');
+    if (cert) cert.insertAdjacentElement('afterend', make('seguir'));
+    if (course) course.insertAdjacentElement('afterend', make('seguir-inicio'));
+    renderNovedades();
+  }
+
   function buildCertCard() {
     var sec = $('glosario');
     if (!sec) return;
@@ -574,16 +625,20 @@
       certDlg.innerHTML = '<form method="dialog"><h2 class="ed-dlg__title">Tu certificado</h2>' +
         '<p class="ed-dlg__hint">Así va a figurar tu nombre en el certificado. Revisalo antes de descargarlo.</p>' +
         '<label class="ed-dlg__row">Nombre y apellido<input name="name" type="text" maxlength="70" autocomplete="name" required></label>' +
+        '<label class="ed-dlg__check"><input name="novedades" type="checkbox"> Quiero recibir novedades de ST Relaciones Públicas: cursos, talleres y guías nuevas. Me puedo dar de baja cuando quiera.</label>' +
         '<div class="ed-dlg__actions"><span></span><button type="button" data-c="cancel">Cancelar</button><button type="submit" class="ed-primary">Descargar</button></div></form>';
       document.body.appendChild(certDlg);
     }
     return new Promise(function (resolve) {
       var input = certDlg.querySelector('[name="name"]');
       input.value = current || '';
+      var nov = certDlg.querySelector('[name="novedades"]');
+      nov.checked = !!(novedades && novedades.acepta);
       certDlg.onsubmit = function (e) {
         e.preventDefault();
         var v = input.value.replace(/\s+/g, ' ').trim();
         if (v.length < 3) { input.focus(); return; }
+        if (nov.checked !== !!(novedades && novedades.acepta)) setNovedades(nov.checked, true);
         certDlg.close();
         resolve(v);
       };
@@ -1048,6 +1103,7 @@
       stats: { done: doneCount(), total: TOTAL, pct: Math.round(finishedPct()), at: Date.now() },
       profile: { name: user.name, email: user.email, photo: user.photo }
     };
+    if (novedades) patch.profile.novedades = novedades;
     if (Object.keys(f).length) patch.fields = f;
     saving = true;
     backend.save(user.uid, patch, isNew).then(function () {
@@ -1166,6 +1222,8 @@
       data = data || {};
       var hadBookmark = state.bookmark;
       mergeProgress(data.progress);
+      novedades = (data.profile && data.profile.novedades) || null;
+      renderNovedades();
       applyValues(data.fields);
       renderFinish();
       loaded = true;
@@ -1216,6 +1274,8 @@
       if (a) a(); else if (t) goTo(t);
     },
     'dismiss-banner': hideBanner,
+    'novedades': function () { closeMenu(); setNovedades(!(novedades && novedades.acepta)); },
+    'novedades-si': function () { setNovedades(true); },
     'top': function () { window.scrollTo({ top: 0, behavior: 'smooth' }); },
     'login': function () { closeDrawer(false); login(); },
     'logout': logout,
@@ -1269,6 +1329,7 @@
   buildFinishCards();
   buildCertCard(); // va después del "¿Terminaste?" del glosario
   buildCourse(); // "Continuar" del inicio reemplaza al aviso de "La última vez llegaste a…"
+  buildSeguir();
   renderCert();
   route();
   window.addEventListener('hashchange', route);

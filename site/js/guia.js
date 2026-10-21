@@ -771,6 +771,75 @@
     $$('.js-total-count').forEach(function (el) { el.textContent = TOTAL; });
   }
 
+  // ---- Copiar mis respuestas: todo lo escrito en una actividad, listo para pegar en Claude ----
+  var answerGroups = [];
+  function buildCopyAnswers() {
+    var byKey = {};
+    Object.keys(fields).forEach(function (id) {
+      var host = document.querySelector('[data-field="' + id + '"]');
+      var sec = host && host.closest('main>section[id]');
+      if (!sec) return;
+      var parts = (host.getAttribute('data-label') || '').split(' › ');
+      var name = parts[1] || parts[0] || sec.id, key = sec.id + '|' + name;
+      if (!byKey[key]) { byKey[key] = { name: name, ids: [], hosts: [] }; answerGroups.push(byKey[key]); }
+      byKey[key].ids.push(id);
+      byKey[key].hosts.push(host);
+    });
+    answerGroups.forEach(function (g, i) {
+      // El botón va debajo del bloque donde termina la actividad
+      var anchor = g.hosts[g.hosts.length - 1];
+      while (anchor.parentElement && !anchor.parentElement.matches('main>section')) anchor = anchor.parentElement;
+      var box = document.createElement('div');
+      box.className = 'copy-answers';
+      box.setAttribute('data-noprint', '');
+      box.setAttribute('data-auth', 'in');
+      box.innerHTML = '<button type="button" class="copy-answers__btn" data-action="copy-answers">⧉ Copiar mis respuestas</button>';
+      box.firstChild.setAttribute('data-group', i);
+      box.firstChild.setAttribute('aria-label', 'Copiar mis respuestas: ' + g.name);
+      var after = anchor;
+      while (after.nextElementSibling && after.nextElementSibling.classList.contains('copy-answers')) after = after.nextElementSibling;
+      after.insertAdjacentElement('afterend', box);
+    });
+  }
+  function copyAnswers(btn) {
+    var g = answerGroups[+btn.getAttribute('data-group')];
+    var lines = [];
+    g.ids.forEach(function (id, k) {
+      var parts = (g.hosts[k].getAttribute('data-label') || '').split(' › ');
+      var lbl = parts.slice(2).join(' › ') || parts.slice(1).join(' › ');
+      var v = values[id];
+      if (v === true) lines.push('✓ ' + lbl);
+      else if (typeof v === 'string' && v.trim()) lines.push(lbl + ': ' + v.trim());
+    });
+    if (!lines.length) { flash('Todavía no escribiste nada en esta actividad.'); return; }
+    var title = g.name === g.name.toUpperCase() ? g.name.charAt(0) + g.name.slice(1).toLowerCase() : g.name;
+    copyText('Mis respuestas · ' + title + '\n\n' + lines.join('\n')).then(function () {
+      btn.textContent = '✓ Copiado. Pegalo en Claude';
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function () { btn.textContent = '⧉ Copiar mis respuestas'; }, 2500);
+    }, function () { flash('No se pudo copiar. Probá de nuevo.'); });
+  }
+
+  function buildRedes() {
+    var box = $('redes'), c = window.GUIA_CONTACTO || {};
+    if (!box) return;
+    var redes = [
+      ['whatsapp', 'WhatsApp', 'red red--wa', function (n) { return 'https://wa.me/' + n.replace(/\D/g, '') + '?text=' + encodeURIComponent('Hola, tengo una consulta sobre la Guía práctica de prompting.'); }],
+      ['instagram', 'Instagram'], ['linkedin', 'LinkedIn'], ['tiktok', 'TikTok'], ['youtube', 'YouTube']
+    ];
+    redes.forEach(function (r) {
+      var v = c[r[0]];
+      if (!v) return;
+      var a = document.createElement('a');
+      a.className = r[2] || 'red';
+      a.href = r[3] ? r[3](v) : v;
+      a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = r[1];
+      box.appendChild(a);
+    });
+    if (!box.children.length) box.closest('.contacto').hidden = true;
+  }
+
   function setEditable(on) {
     Object.keys(fields).forEach(function (id) {
       var c = fields[id];
@@ -1044,6 +1113,7 @@
     'logout': logout,
     'account-menu': function () { if (menu.hidden) openMenu(); else closeMenu(); },
     'copy': copyPrompt,
+    'copy-answers': copyAnswers,
     'edit-guide': startEditor,
     'finish': toggleFinish,
     'certificate': downloadCertificate,
@@ -1077,6 +1147,8 @@
 
   // ---- Inicio ----
   buildFields();
+  buildCopyAnswers();
+  buildRedes();
   setEditable(false);
   var saved = load();
   state.maxIdx = typeof saved.maxIdx === 'number' ? saved.maxIdx : -1;

@@ -295,7 +295,7 @@ body:not(.edit-mode) .edit-only{display:none!important}
   body.lms.view-home main>#indice,body.lms.view-chapter main>section.is-open{display:block}
   body.lms.view-chapter #portada,body.lms.view-chapter #curso{display:none}
   /* En el inicio, del índice impreso queda solo la tabla de videos (los módulos ya están en tarjetas) */
-  body.lms.view-home #indice>[data-edit="indice-e1"],body.lms.view-home #indice>[data-edit="indice-e2"],body.lms.view-home #indice>[data-edit="indice-e3"]{display:none}
+  body.lms.view-home #indice>[data-edit="indice-e1"],body.lms.view-home #indice>[data-edit="indice-e2"],body.lms.view-home #indice>[data-edit="indice-e3"]{display:none!important}
   body.lms.view-home #indice{padding-top:40px!important}
   body.lms.view-home #indice>h3{margin-top:0!important}
   body.lms .hero{padding-top:clamp(32px,6vw,72px)!important;padding-bottom:clamp(28px,4vw,48px)!important}
@@ -397,3 +397,29 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 @media print{.caso{background:#fff;border:1px solid #F8444F;border-left-width:5px}.caso__fig img{max-height:90mm;width:auto;max-width:100%}}
 .caso__clave{margin:16px 0 0!important;padding:12px 14px;border-radius:8px;background:#fff;border:1px solid #F8D3CF}
 .caso__fig{max-width:720px}
+
+/* Copiar mis respuestas (debajo de cada actividad) */
+.copy-answers{display:flex;justify-content:flex-end;margin:6px 0 18px}
+.copy-answers__btn{border:1.5px solid #012C3D;background:#fff;color:#012C3D;border-radius:999px;padding:7px 14px;font:600 13px/1 Inter,sans-serif;cursor:pointer}
+.copy-answers__btn:hover{background:#012C3D;color:#fff}
+
+/* Inicio: preguntas frecuentes y contacto (solo en pantalla, solo en el inicio) */
+#ayuda{padding-top:clamp(36px,6vw,56px)}
+@media screen{body.lms.view-chapter #ayuda{display:none}}
+.ayuda__eyebrow{font:600 12px/1 Inter,sans-serif;letter-spacing:.12em;color:#D32B36}
+.ayuda__title{font-size:clamp(24px,4vw,30px);margin:10px 0 18px}
+.faq{border-top:1px solid #DDE1DB}
+.faq details{border-bottom:1px solid #DDE1DB}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;padding:16px 4px;font:600 16px/1.35 Inter,sans-serif;color:#012C3D}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:400 22px/1 Inter,sans-serif;color:#D32B36}
+.faq details[open] summary::after{content:"–"}
+.faq details p{margin:0 4px 16px;color:#333C3F}
+.contacto{margin-top:40px;padding:24px;border-radius:16px;background:#012C3D;color:#fff}
+.contacto h3{color:#fff;font-size:20px;margin:0 0 6px}
+.contacto p{color:#DCEEF0;margin:0 0 16px}
+.redes{display:flex;flex-wrap:wrap;gap:10px}
+.red{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;font:600 14px/1 Inter,sans-serif}
+.red:hover{background:#fff;color:#012C3D;text-decoration:none}
+.red--wa{background:#1F8A5B;border-color:#1F8A5B}
+.red b{font:800 12px/1 Inter,sans-serif}

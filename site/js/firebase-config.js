@@ -43,3 +43,12 @@ window.GUIA_CERTIFICADO = {
   // ID numérico de la página de empresa en LinkedIn: si se completa, se muestra el logo de ST
   linkedinOrgId: '76160143'
 };
+
+// Contacto y redes del inicio. Las que queden vacías no se muestran.
+window.GUIA_CONTACTO = {
+  whatsapp: '', // número con código de país, sin + ni espacios. Ej.: 5493834000000
+  instagram: '',
+  linkedin: 'https://www.linkedin.com/company/st-relaciones-publicas/',
+  tiktok: '',
+  youtube: ''
+};

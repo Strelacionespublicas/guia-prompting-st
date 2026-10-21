@@ -46,9 +46,9 @@ window.GUIA_CERTIFICADO = {
 
 // Contacto y redes del inicio. Las que queden vacías no se muestran.
 window.GUIA_CONTACTO = {
-  whatsapp: '', // número con código de país, sin + ni espacios. Ej.: 5493834000000
-  instagram: '',
+  whatsapp: '5493834070959', // número con código de país, sin + ni espacios. Ej.: 5493834000000
+  instagram: 'https://www.instagram.com/strelacionespublicas/',
   linkedin: 'https://www.linkedin.com/company/st-relaciones-publicas/',
-  tiktok: '',
+  tiktok: 'https://www.tiktok.com/@strelacionespublicas',
   youtube: ''
 };

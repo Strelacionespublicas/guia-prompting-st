@@ -768,9 +768,10 @@
         fields[id] = ctl;
         return;
       }
-      if (host.getAttribute('data-kind') === 'estado') {
+      var opts = host.getAttribute('data-options');
+      if (host.getAttribute('data-kind') === 'estado' || opts) {
         ctl = document.createElement('select');
-        ESTADOS.forEach(function (o) {
+        (opts ? [''].concat(opts.split('|')) : ESTADOS).forEach(function (o) {
           var opt = document.createElement('option');
           opt.value = o; opt.textContent = o || '—';
           ctl.appendChild(opt);
@@ -908,6 +909,64 @@
     var n = doneCount();
     $$('.js-done-count').forEach(function (el) { el.textContent = n; });
     renderFinish();
+    renderDiagnostico();
+  }
+
+  // ---- Diagnóstico inicial: recomendación con reglas simples (no usa IA) ----
+  // Las reglas están a la vista en el texto, para que el alumno entienda por qué se le recomienda algo.
+  var PROYECTOS = {
+    'Formulario o inscripción': ['Un formulario de inscripción con cupo y lista de espera.', 'Seguí el Anexo D: es exactamente este caso, paso a paso.', '#lab-proyecto'],
+    'Turnos o agenda': ['Una agenda de turnos para un solo servicio, sin pagos en línea.', 'Mirá el caso de agenda de turnos del capítulo 8.', '#cap8'],
+    'Cotizador o calculadora': ['Un cotizador con una sola lista de precios que calcule el total y arme el texto del presupuesto.', 'Mirá el caso del cotizador del capítulo 8.', '#cap8'],
+    'Registro de clientes': ['Un registro de clientes con estados (consulta, propuesta, cliente) antes de pensar en automatizaciones.', 'Mirá el caso del CRM del capítulo 8.', '#cap8'],
+    'Directorio o catálogo': ['Un directorio de solo lectura con datos de ejemplo, sin formulario de carga.', 'Mirá el caso del directorio del capítulo 8.', '#cap8'],
+    'Página informativa': ['Una página de una sola pantalla con la información esencial y un botón de contacto.', 'Empezá por el capítulo 3 para ordenar el contenido.', '#cap3'],
+    'Otra': ['La versión más chica que resuelva una sola tarea de tu problema.', 'Usá la ficha de viabilidad del capítulo 1 para recortarla.', '#viabilidad']
+  };
+  function renderDiagnostico() {
+    var box = $('dx-reco');
+    if (!box) return;
+    var v = function (k) { var x = values['como-usar-dx-' + k]; return typeof x === 'string' ? x : ''; };
+    var exp = v('experiencia'), tipo = v('tipo'), quien = v('usuario'), plata = v('presupuesto'), tiempo = v('tiempo'), meta = v('resultado');
+    box.innerHTML = '';
+    if (!exp && !tipo && !tiempo && !meta) {
+      box.innerHTML = '<p class="dx-reco__empty">Elegí tus respuestas y acá aparece un recorrido sugerido. Podés cambiarlas cuando quieras.</p>';
+      return;
+    }
+    var items = [];
+    // Recorrido según la experiencia
+    if (exp === 'Nunca la usé') items.push(['Tu recorrido', 'Seguí los capítulos en orden, sin saltear del 1 al 4: ahí está la base de todo lo demás.']);
+    else if (exp === 'La uso para textos o consultas') items.push(['Tu recorrido', 'Los capítulos 2 y 3 te van a resultar conocidos: leelos rápido y dedicale más tiempo al 4 (contexto), al 8 (herramientas reales) y al 12 (tu proyecto).']);
+    else if (exp === 'Ya construí algo con IA') items.push(['Tu recorrido', 'Repasá los capítulos 9 a 11 (iterar, ahorrar vueltas y probar) y usá el Anexo F para mejorar lo que ya tenés.', '#lab-mejorar']);
+    // Nivel realista para empezar
+    var nivel = { 'Idea documentada (A)': 1, 'Prototipo navegable (B)': 2, 'Herramienta funcional (C)': 3 }[meta] || 0, tope = 3, motivo = '';
+    if (tiempo === 'Menos de 2 horas por semana' || exp === 'Nunca la usé') { tope = 2; motivo = tiempo === 'Menos de 2 horas por semana' ? 'con menos de 2 horas por semana' : 'si es tu primera vez con IA'; }
+    if (nivel) {
+      var nombres = ['', 'una idea documentada (A)', 'un prototipo navegable (B)', 'una herramienta funcional (C)'];
+      items.push(['Tu primera meta', nivel > tope
+        ? 'Apuntá primero a ' + nombres[tope] + ': ' + motivo + ', ir directo a C suele frustrar. Cuando lo tengas, el paso siguiente es C.'
+        : 'Apuntá a ' + nombres[nivel] + '. Es una meta realista con lo que contaste.']);
+    }
+    // Primer proyecto viable según el tipo de herramienta
+    var pr = PROYECTOS[tipo];
+    if (pr) items.push(['Tu primer proyecto', pr[0] + ' ' + pr[1], pr[2]]);
+    // Advertencias
+    if (quien === 'Clientes o público') items.push(['Antes de publicar', 'Si la van a usar clientes o público, vas a guardar datos de otras personas: pasá por el capítulo 11 (seguridad y datos personales).', '#cap11']);
+    if (plata === 'Sin presupuesto: solo herramientas gratuitas') items.push(['Presupuesto', 'Se puede empezar sin gastar. Anotá en la ficha de viabilidad qué servicios usás y qué podría empezar a cobrarse si crece el uso.', '#viabilidad']);
+    items.forEach(function (it) {
+      var p = document.createElement('p');
+      var b = document.createElement('strong');
+      b.textContent = it[0] + '. ';
+      p.appendChild(b);
+      p.appendChild(document.createTextNode(it[1] + ' '));
+      if (it[2] && document.querySelector(it[2])) {
+        var a = document.createElement('a');
+        a.href = it[2];
+        a.textContent = 'Ir →';
+        p.appendChild(a);
+      }
+      box.appendChild(p);
+    });
   }
 
   var askedAt = 0;

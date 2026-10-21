@@ -375,3 +375,23 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 .edit-mode div[id^="video"]:not(.video-ready)::before{content:"Oculto para los alumnos hasta que cargues el video";display:block;margin-bottom:10px;font:600 12px/1.3 Inter,sans-serif;color:#8A5A0B;background:#FBF1DD;border-radius:6px;padding:6px 10px}
 .edit-mode .video-row-pending{display:table-row;opacity:.5}
 .edit-mode #indice>[data-edit="indice-e4"],.edit-mode #indice>[data-edit="indice-e5"],.edit-mode #indice>div:has(>table){display:revert}
+
+/* Casos reales: cómo se aplicó cada capítulo al construir esta guía */
+.caso{break-inside:avoid;margin:32px 0;padding:22px 24px;border-radius:12px;background:#FFF6F4;border-left:5px solid #F8444F}
+.caso__label{font:700 11px/1 Inter,sans-serif;letter-spacing:.14em;color:#D32B36}
+.caso__title{font-size:20px;margin:8px 0 12px}
+.caso p,.caso li{font-size:15px}
+.caso ul,.caso ol{margin-bottom:12px}
+.caso__fig{margin:16px 0 4px}
+.caso__fig img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid #DDE1DB;background:#fff}
+.caso__fig--narrow{max-width:260px}
+.caso__pie{font-size:13px!important;color:#6F7A7C;margin:6px 0 0}
+.caso__duo{display:flex;flex-wrap:wrap;gap:16px}
+.caso__duo .caso__fig{flex:1 1 200px}
+.caso__cmp{border-radius:8px;padding:12px 16px;margin:0 0 10px}
+.caso__cmp p{margin:6px 0 0;font-size:14px}
+.caso__cmp strong:first-child{font:700 12px/1 Inter,sans-serif;letter-spacing:.06em}
+.caso__cmp--bad{background:#FEE0E2}.caso__cmp--bad>strong:first-child{color:#D32B36}
+.caso__cmp--good{background:#E4F3EC}.caso__cmp--good>strong:first-child{color:#1F8A5B}
+.caso__nota{margin:0 0 12px;padding:12px 16px;border-radius:8px;background:#012C3D;color:#DCEEF0;font:500 14px/1.6 ui-monospace,Menlo,Consolas,monospace}
+@media print{.caso{background:#fff;border:1px solid #F8444F;border-left-width:5px}.caso__fig img{max-height:90mm;width:auto;max-width:100%}}

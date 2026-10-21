@@ -428,3 +428,9 @@ body:not(.has-videos) #indice>[data-edit="indice-e4"],body:not(.has-videos) #ind
 .course__note{display:block;margin-top:6px;font:400 14px/1.4 Karla,sans-serif;letter-spacing:0;text-transform:none;color:#6F7A7C}
 .lms-side__sep{margin:14px 20px 4px;padding-top:12px;border-top:1px solid #DDE1DB;font:700 11px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6F7A7C}
 .drawer-sep{margin:12px 20px 4px;padding-top:12px;border-top:1px solid #DDE1DB;font:700 11px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6F7A7C}
+.traba{border:1px solid #DDE1DB;border-left:4px solid #78BDC4;border-radius:8px;padding:18px 20px;margin:24px 0;scroll-margin-top:90px}
+.traba p{margin:0 0 8px}
+.traba-indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 24px;margin:0 0 8px;padding-left:22px}
+.traba-indice a{color:#012C3D}
+.cols-2{columns:2 240px;column-gap:32px}
+.cols-2 li{break-inside:avoid}

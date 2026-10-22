@@ -876,24 +876,31 @@
       byKey[key].ids.push(id);
       byKey[key].hosts.push(host);
     });
+    // El botón va debajo del bloque donde termina la actividad. Si varias actividades terminan
+    // en el mismo bloque (una tabla con varias secciones, como el checklist), va un solo botón para todas.
+    var byAnchor = [];
     answerGroups.forEach(function (g, i) {
-      // El botón va debajo del bloque donde termina la actividad
       var anchor = g.hosts[g.hosts.length - 1];
       while (anchor.parentElement && !anchor.parentElement.matches('main>section')) anchor = anchor.parentElement;
+      var slot = byAnchor.filter(function (b) { return b.anchor === anchor; })[0];
+      if (!slot) { slot = { anchor: anchor, groups: [] }; byAnchor.push(slot); }
+      slot.groups.push(i);
+    });
+    byAnchor.forEach(function (slot) {
       var box = document.createElement('div');
       box.className = 'copy-answers';
       box.setAttribute('data-noprint', '');
       box.setAttribute('data-auth', 'in');
       box.innerHTML = '<button type="button" class="copy-answers__btn" data-action="copy-answers">⧉ Copiar mis respuestas</button>';
-      box.firstChild.setAttribute('data-group', i);
-      box.firstChild.setAttribute('aria-label', 'Copiar mis respuestas: ' + g.name);
-      var after = anchor;
+      box.firstChild.setAttribute('data-group', slot.groups.join(','));
+      box.firstChild.setAttribute('aria-label', 'Copiar mis respuestas: ' + slot.groups.map(function (i) { return answerGroups[i].name; }).join(', '));
+      var after = slot.anchor;
       while (after.nextElementSibling && after.nextElementSibling.classList.contains('copy-answers')) after = after.nextElementSibling;
       after.insertAdjacentElement('afterend', box);
     });
   }
-  function copyAnswers(btn) {
-    var g = answerGroups[+btn.getAttribute('data-group')];
+  function niceName(n) { return n === n.toUpperCase() ? n.charAt(0) + n.slice(1).toLowerCase() : n; }
+  function groupLines(g) {
     var lines = [];
     g.ids.forEach(function (id, k) {
       var parts = (g.hosts[k].getAttribute('data-label') || '').split(' › ');
@@ -902,9 +909,22 @@
       if (v === true) lines.push('✓ ' + lbl);
       else if (typeof v === 'string' && v.trim()) lines.push(lbl + ': ' + v.trim());
     });
-    if (!lines.length) { flash('Todavía no escribiste nada en esta actividad.'); return; }
-    var title = g.name === g.name.toUpperCase() ? g.name.charAt(0) + g.name.slice(1).toLowerCase() : g.name;
-    copyText('Mis respuestas · ' + title + '\n\n' + lines.join('\n')).then(function () {
+    return lines;
+  }
+  function copyAnswers(btn) {
+    var groups = btn.getAttribute('data-group').split(',').map(function (i) { return answerGroups[+i]; });
+    var text;
+    if (groups.length === 1) {
+      var lines = groupLines(groups[0]);
+      if (lines.length) text = 'Mis respuestas · ' + niceName(groups[0].name) + '\n\n' + lines.join('\n');
+    } else {
+      // Varias actividades juntas: cada una con su título; el encabezado es el del módulo
+      var parts = groups.map(function (g) { var l = groupLines(g); return l.length ? niceName(g.name) + '\n' + l.join('\n') : ''; }).filter(Boolean);
+      var sec = groups[0].hosts[0].closest('main>section[id]'), h = sec && sec.querySelector('h2');
+      if (parts.length) text = 'Mis respuestas · ' + (h ? h.textContent.trim() : niceName(groups[0].name)) + '\n\n' + parts.join('\n\n');
+    }
+    if (!text) { flash('Todavía no escribiste nada en esta actividad.'); return; }
+    copyText(text).then(function () {
       btn.textContent = '✓ Copiado. Pegalo en Claude';
       clearTimeout(btn._t);
       btn._t = setTimeout(function () { btn.textContent = '⧉ Copiar mis respuestas'; }, 2500);

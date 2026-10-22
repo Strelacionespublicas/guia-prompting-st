@@ -20,7 +20,8 @@
     ['checklist', 'A', 'Checklist general'], ['laboratorio', 'B', 'Laboratorio de prompts'], ['glosario', 'C', 'Glosario'],
     // Laboratorios optativos: van al final para no mover los índices guardados (marcador, último lugar)
     ['lab-proyecto', 'D', 'Proyecto guiado: inscripción con cupos', 'opt'], ['lab-trabado', 'E', 'Cuando te trabás', 'opt'],
-    ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt'], ['lab-publicar', 'G', 'Publicar tu proyecto', 'opt']
+    ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt'], ['lab-publicar', 'G', 'Publicar tu proyecto', 'opt'],
+    ['atajos', 'H', 'Atajos y comandos', 'opt']
   ];
 
   var $ = function (id) { return document.getElementById(id); };

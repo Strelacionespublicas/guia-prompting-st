@@ -14,7 +14,8 @@ Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relac
 - `site/js/admin.js` + `admin.html`: panel de seguimiento.
 
 ## Laboratorios optativos y diagnóstico
-- `CHAPTERS` en `guia.js` termina con los laboratorios optativos (Anexos D a G: `lab-proyecto`, `lab-trabado`, `lab-mejorar`, `lab-publicar`), marcados con un cuarto elemento `'opt'`. No cuentan para el certificado (`FINISHABLE` los excluye: siguen siendo 17), se muestran aparte en Mi curso, la barra lateral y el índice, y se recorren entre ellos. Van al final de `CHAPTERS` para no mover los índices guardados (marcador, último lugar); en el HTML están antes del glosario para que la guía impresa cierre con el glosario.
+- `CHAPTERS` en `guia.js` termina con los laboratorios optativos (Anexos D a H: `lab-proyecto`, `lab-trabado`, `lab-mejorar`, `lab-publicar` y la referencia rápida `atajos`), marcados con un cuarto elemento `'opt'`. No cuentan para el certificado (`FINISHABLE` los excluye: siguen siendo 17), se muestran aparte en Mi curso, la barra lateral y el índice, y se recorren entre ellos. Van al final de `CHAPTERS` para no mover los índices guardados (marcador, último lugar); en el HTML están antes del glosario para que la guía impresa cierre con el glosario.
+- El Anexo H (`#atajos`) resume atajos de teclado, comandos y hooks de Claude Code para principiantes, tomados de la documentación oficial (octubre 2026). Si cambia Claude Code, revisarlo contra code.claude.com/docs.
 - Un campo con `data-options="a|b|c"` se muestra como lista desplegable y se guarda como texto, igual que los demás.
 - El diagnóstico inicial (`como-usar-dx-*` en "Cómo usar esta guía") arma la recomendación con reglas fijas en `renderDiagnostico()` (no usa IA). La ficha de viabilidad está en el capítulo 1 (`#viabilidad`, campos `cap1-v*`).
 - Los ids de campo empiezan con el id de su sección: así los cuenta "Mi curso" como actividades del módulo.

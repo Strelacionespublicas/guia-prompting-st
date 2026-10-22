@@ -174,6 +174,21 @@
     });
     main.insertBefore(course, main.firstChild);
 
+    // Cursos de ST y biblioteca de recursos: los carga la docente desde el modo edición (js/contenido.js)
+    var lib = document.createElement('div');
+    lib.id = 'biblioteca';
+    lib.className = 'lib';
+    lib.setAttribute('data-noprint', '');
+    lib.innerHTML =
+      '<div class="lib-area" data-lib="cursos"><span class="course__eyebrow">CURSOS DE ST</span><h2 class="course__title">Seguí aprendiendo</h2>' +
+      '<p class="course__lead">Otros cursos y talleres de ST Relaciones Públicas para llevar tu proyecto más lejos.</p>' +
+      '<button type="button" class="edit-only lib-add" data-edit-action="lib-add" data-ref="cursos">＋ Agregar curso</button></div>' +
+      '<div class="lib-area" data-lib="recursos"><span class="course__eyebrow">BIBLIOTECA</span><h2 class="course__title">Recursos para tu proyecto</h2>' +
+      '<p class="course__lead">Plantillas, guías y materiales para descargar o consultar cuando los necesites.</p>' +
+      '<button type="button" class="edit-only lib-add" data-edit-action="lib-add" data-ref="recursos">＋ Agregar recurso</button></div>';
+    course.insertAdjacentElement('afterend', lib);
+    if (window.GuiaContent) window.GuiaContent.renderLibrary();
+
     // Barra lateral con los módulos (en pantallas anchas)
     side = document.createElement('nav');
     side.className = 'lms-side';

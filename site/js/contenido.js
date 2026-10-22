@@ -202,6 +202,78 @@
       if (/^(TD|TH|LI|DD)$/.test(el.tagName)) el.appendChild(wrap);
       else el.parentNode.insertBefore(wrap, el.nextSibling);
     });
+    renderLibrary();
+  }
+
+  // ---- Cursos de ST y biblioteca de recursos (en el inicio) ----
+  // Viven en extras con claves reservadas ('@cursos', '@recursos'): así se guardan con el
+  // mismo "Guardar y publicar" y no hace falta tocar las reglas de Firestore.
+  var LIB = { cursos: '@cursos', recursos: '@recursos' };
+  function kindOf(url) {
+    if (embedOf(url)) return /drive\.google/i.test(url) ? 'ARCHIVO' : 'VIDEO';
+    if (/\.pdf($|\?)/i.test(url)) return 'PDF';
+    if (/docs\.google\.com\/(document|presentation|spreadsheets|forms)/i.test(url)) return 'GOOGLE DOCS';
+    if (/notion\.(so|site)/i.test(url)) return 'NOTION';
+    if (/canva\.com/i.test(url)) return 'CANVA';
+    return 'ENLACE';
+  }
+  function libCard(item, kind, i) {
+    var url = safeUrl(item.url);
+    if (!url) return null;
+    var li = document.createElement('li');
+    li.className = 'lib-card lib-card--' + kind;
+    li.innerHTML = '<span class="lib-card__chip"></span><h4 class="lib-card__title"></h4><p class="lib-card__text"></p>' +
+      '<a class="lib-card__btn" target="_blank" rel="noopener"></a>' +
+      '<span class="lib-card__tools edit-only-group"><button type="button" class="edit-only" data-edit-action="lib-edit"></button>' +
+      '<button type="button" class="edit-only" data-edit-action="lib-up" title="Mover antes">↑</button>' +
+      '<button type="button" class="edit-only" data-edit-action="lib-remove">Quitar</button></span>';
+    li.querySelector('.lib-card__chip').textContent = kind === 'cursos' ? (item.cat || 'Curso') : kindOf(url);
+    li.querySelector('.lib-card__title').textContent = item.title || hostOf(url);
+    var p = li.querySelector('.lib-card__text');
+    if (item.texto) p.textContent = item.texto; else p.remove();
+    var a = li.querySelector('.lib-card__btn');
+    a.href = url;
+    a.textContent = kind === 'cursos' ? 'Ver el curso →' : 'Abrir →';
+    li.querySelector('[data-edit-action="lib-edit"]').textContent = 'Editar';
+    Array.prototype.forEach.call(li.querySelectorAll('[data-edit-action]'), function (b) { b.setAttribute('data-ref', kind + ':' + i); });
+    if (!i) li.querySelector('[data-edit-action="lib-up"]').remove();
+    return li;
+  }
+  function renderLibrary() {
+    var box = document.getElementById('biblioteca');
+    if (!box) return;
+    var any = false;
+    Object.keys(LIB).forEach(function (kind) {
+      var area = box.querySelector('[data-lib="' + kind + '"]');
+      if (!area) return;
+      var list = current.extras[LIB[kind]] || [], groups = {}, order = [];
+      Array.prototype.forEach.call(area.querySelectorAll('.lib-group,.lib-grid'), function (n) { n.remove(); });
+      list.forEach(function (item, i) {
+        // Los cursos van en una sola grilla; los recursos se agrupan por categoría, en el orden en que aparecen
+        var g = kind === 'cursos' ? '' : (item.cat || 'Otros recursos').trim();
+        if (!(g in groups)) { groups[g] = []; order.push(g); }
+        var card = libCard(item, kind, i);
+        if (card) groups[g].push(card);
+      });
+      order.forEach(function (g) {
+        if (!groups[g].length) return;
+        if (g) {
+          var h = document.createElement('h4');
+          h.className = 'lib-group';
+          h.textContent = g;
+          area.appendChild(h);
+        }
+        var ul = document.createElement('ul');
+        ul.className = 'lib-grid';
+        groups[g].forEach(function (c) { ul.appendChild(c); });
+        area.appendChild(ul);
+      });
+      var has = list.some(function (it) { return safeUrl(it.url); });
+      area.classList.toggle('lib-ready', has);
+      any = any || has;
+    });
+    // Sin nada cargado, los alumnos no ven el bloque (en modo edición sí, para cargarlo)
+    box.classList.toggle('lib-ready', any);
   }
 
   function cached() {
@@ -221,6 +293,8 @@
     embedOf: embedOf,
     safeUrl: safeUrl,
     apply: apply,
+    renderLibrary: renderLibrary,
+    LIB: LIB,
     cache: cache,
     current: function () { return current; },
     saved: function () { return cached() || {}; },

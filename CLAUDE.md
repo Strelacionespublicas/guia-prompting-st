@@ -23,6 +23,7 @@ Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relac
 
 ## Captación
 - Novedades: consentimiento expreso y revocable, guardado en `users/{uid}.profile.novedades` (`{ acepta, at }`). Se pide en el diálogo del certificado (casilla sin marcar), en el menú de la cuenta y en el bloque "Seguí con ST". El panel muestra ✉, lo suma al CSV y copia los correos de quienes aceptaron. Si cambia el uso de esos datos, actualizar `site/privacidad.html`.
+- Cursos de ST y biblioteca de recursos (`#biblioteca`, en el inicio): la docente los carga desde el modo edición (＋ Agregar curso / recurso, Editar, ↑, Quitar). Se guardan en `content/guia` dentro de `extras` con las claves reservadas `@cursos` y `@recursos` (listas de `{ url, title, texto?, cat? }`), así no hace falta cambiar las reglas. Los recursos se agrupan por `cat`; en los cursos `cat` es la etiqueta (Gratis, Pago…). Sin nada cargado, los alumnos no ven el bloque. No se imprime.
 - "Seguí con ST" (`buildSeguir()`): servicios definidos en `window.GUIA_SERVICIOS` (`site/js/firebase-config.js`), con botón a WhatsApp. Se ve al final del glosario y, en el inicio, solo con el certificado listo.
 
 ## Formato visual

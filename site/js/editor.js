@@ -64,12 +64,14 @@
   }
   // En modo edición los enlaces no navegan: se editan
   function onClick(e) {
-    var a = e.target.closest('[data-edit] a');
+    var a = e.target.closest('[data-edit] a, #biblioteca a');
     if (a && body.classList.contains('edit-mode')) e.preventDefault();
     var act = e.target.closest('[data-edit-action]');
     if (!act) return;
     e.preventDefault();
-    if (act.getAttribute('data-edit-action') === 'remove-extra') {
+    var what = act.getAttribute('data-edit-action');
+    if (/^lib-/.test(what)) libAction(what, act.getAttribute('data-ref'));
+    else if (what === 'remove-extra') {
       var ref = act.getAttribute('data-ref').split(':'), list = draft.extras[ref[0]] || [];
       list.splice(Number(ref[1]), 1);
       if (!list.length) delete draft.extras[ref[0]];
@@ -98,10 +100,19 @@
       dlg.querySelector('.ed-dlg__title').textContent = opts.title;
       dlg.querySelector('.ed-dlg__hint').textContent = opts.hint || '';
       var url = dlg.querySelector('[name="url"]'), title = dlg.querySelector('[name="title"]');
+      var texto = dlg.querySelector('[name="texto"]'), cat = dlg.querySelector('[name="cat"]');
       url.value = opts.url || '';
       title.value = opts.label || '';
+      texto.value = opts.texto || '';
+      cat.value = opts.cat || '';
       dlg.querySelector('.ed-dlg__label-row').hidden = !opts.withTitle;
+      dlg.querySelector('.ed-dlg__texto-row').hidden = !opts.withTexto;
+      dlg.querySelector('.ed-dlg__cat-row').hidden = !opts.catLabel;
+      dlg.querySelector('.ed-dlg__cat-name').textContent = opts.catLabel || '';
+      cat.placeholder = opts.catPlaceholder || '';
+      dlg.querySelector('#ed-cats').innerHTML = (opts.cats || []).map(function (c) { return '<option value="' + c.replace(/[&"<]/g, '') + '">'; }).join('');
       dlg.querySelector('[data-ed="remove"]').hidden = !opts.removable;
+      dlg.querySelector('[data-ed="remove"]').textContent = opts.removeLabel || 'Quitar video';
       var err = dlg.querySelector('.ed-dlg__error');
       err.textContent = '';
       dlg.onsubmit = function (e) {
@@ -110,7 +121,7 @@
         if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
         if (!C.safeUrl(u) || !/\./.test(u)) { err.textContent = 'Revisá el enlace: tiene que empezar con https://'; return; }
         dlg.close();
-        resolve({ url: u, title: title.value.trim() });
+        resolve({ url: u, title: title.value.trim(), texto: texto.value.trim(), cat: cat.value.trim() });
       };
       dlg.querySelector('[data-ed="remove"]').onclick = function () { dlg.close(); resolve({ remove: true }); };
       dlg.querySelector('[data-ed="cancel"]').onclick = function () { dlg.close(); resolve(null); };
@@ -155,6 +166,42 @@
       else draft.videos[vid] = { url: r.url };
       C.apply(draft, { onlyMedia: true });
       setDirty(true);
+    });
+  }
+
+  // ---- Cursos de ST y biblioteca de recursos ----
+  function libAction(what, ref) {
+    var parts = ref.split(':'), kind = parts[0], i = Number(parts[1]), key = C.LIB[kind];
+    var list = draft.extras[key] = draft.extras[key] || [];
+    function done() {
+      if (!list.length) delete draft.extras[key];
+      C.apply(draft, { onlyMedia: true });
+      setDirty(true);
+    }
+    if (what === 'lib-remove') {
+      if (!window.confirm('¿Quitar "' + (list[i].title || list[i].url) + '"?')) return;
+      list.splice(i, 1);
+      return done();
+    }
+    if (what === 'lib-up') {
+      list.splice(i - 1, 0, list.splice(i, 1)[0]);
+      return done();
+    }
+    var item = what === 'lib-edit' ? list[i] : {}, curso = kind === 'cursos';
+    var cats = list.map(function (it) { return it.cat; }).filter(function (c, n, all) { return c && all.indexOf(c) === n; });
+    ask({
+      title: (item.url ? 'Editar ' : 'Agregar ') + (curso ? 'curso' : 'recurso'),
+      hint: curso ? 'Pegá el enlace a la página del curso (inscripción o venta). El precio y las condiciones se muestran ahí.'
+        : 'Pegá el enlace al material: Google Drive (compartido como "Cualquier persona con el enlace"), un PDF, Notion, Canva, un video…',
+      url: item.url, label: item.title, texto: item.texto, cat: item.cat, withTitle: true, withTexto: true,
+      catLabel: curso ? 'Etiqueta (opcional)' : 'Categoría', catPlaceholder: curso ? 'Ej.: Gratis, Pago, Próximamente' : 'Ej.: Plantillas', cats: cats
+    }).then(function (r) {
+      if (!r || r.remove) return;
+      var it = { url: r.url, title: r.title };
+      if (r.texto) it.texto = r.texto;
+      if (r.cat) it.cat = r.cat;
+      if (what === 'lib-edit') list[i] = it; else list.push(it);
+      done();
     });
   }
 
@@ -302,6 +349,9 @@
       '<form method="dialog"><h2 class="ed-dlg__title"></h2><p class="ed-dlg__hint"></p>' +
       '<label class="ed-dlg__row">Enlace<input name="url" type="text" inputmode="url" spellcheck="false" placeholder="https://" autocomplete="off"></label>' +
       '<label class="ed-dlg__row ed-dlg__label-row">Título (opcional)<input name="title" type="text" maxlength="140" autocomplete="off"></label>' +
+      '<label class="ed-dlg__row ed-dlg__texto-row">Descripción breve (opcional)<textarea name="texto" maxlength="300" rows="3"></textarea></label>' +
+      '<label class="ed-dlg__row ed-dlg__cat-row"><span class="ed-dlg__cat-name"></span><input name="cat" type="text" maxlength="40" autocomplete="off" list="ed-cats"></label>' +
+      '<datalist id="ed-cats"></datalist>' +
       '<p class="ed-dlg__error" role="alert"></p>' +
       '<div class="ed-dlg__actions"><button type="button" class="ed-danger" data-ed="remove">Quitar video</button>' +
       '<span></span><button type="button" data-ed="cancel">Cancelar</button><button type="submit" class="ed-primary">Aceptar</button></div></form>';

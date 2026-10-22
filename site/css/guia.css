@@ -631,3 +631,24 @@ kbd{display:inline-block;min-width:22px;box-sizing:border-box;padding:3px 7px;bo
 .quiz__retry{height:40px;padding:0 16px;border:1px solid #012C3D;border-radius:999px;background:transparent;font:600 14px/1 Inter,sans-serif;color:#012C3D;cursor:pointer}
 .quiz [hidden]{display:none!important}
 @media (max-width:560px){.quiz__opt,.quiz__why{margin-left:0}}
+/* ---- Cursos de ST y biblioteca de recursos (inicio) ---- */
+.lib{max-width:1120px;margin:0 auto}
+body.lms.view-chapter #biblioteca,body:not(.edit-mode) .lib:not(.lib-ready),body:not(.edit-mode) .lib-area:not(.lib-ready){display:none}
+.lib-area{padding-top:clamp(32px,6vw,56px)}
+.lib-add{margin-top:16px}
+.lib-group{font:700 13px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5CA8AF;margin:28px 0 12px}
+.lib-area>.course__lead+.lib-grid,.lib-area>.course__lead+.lib-add+.lib-grid{margin-top:20px}
+.lib-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.lib-card{position:relative;display:flex;flex-direction:column;gap:6px;margin:0;padding:16px 16px 14px;background:#fff;border:1px solid #DDE1DB;border-radius:12px;color:#012C3D}
+.lib-card--cursos{border-top:4px solid #F8444F}
+.lib-card__chip{font:700 11px/1.2 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#D32B36}
+.lib-card__title{font:700 16px/1.3 Inter,sans-serif;margin:0}
+.lib-card__text{font-size:14px;line-height:1.5;color:#4D5759;margin:0;flex:1}
+.lib-card__btn{margin-top:6px;font:700 14px/1.2 Inter,sans-serif;color:#D32B36}
+.lib-card--cursos .lib-card__btn{align-self:flex-start;padding:10px 16px;border-radius:999px;background:#F8444F;color:#fff}
+.lib-card--cursos .lib-card__btn:hover{text-decoration:none;color:#fff;filter:brightness(1.06)}
+.lib-card__tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+body:not(.edit-mode) .lib-card__tools{display:none}
+.edit-mode .lib-area:not(.lib-ready)::after{content:"Oculto para los alumnos hasta que cargues el primero";display:block;margin-top:12px;font:600 12px/1.3 Inter,sans-serif;color:#8A5A0B;background:#FBF1DD;border-radius:6px;padding:6px 10px;width:max-content;max-width:100%}
+.ed-dlg textarea{width:100%;box-sizing:border-box;min-height:72px;resize:vertical;padding:8px 12px;border:1px solid #C3C9C4;border-radius:8px;font:400 16px/1.4 Karla,sans-serif;color:#1C2429}
+.ed-dlg textarea:focus{outline:none;border-color:#78BDC4;box-shadow:var(--shadow-focus)}

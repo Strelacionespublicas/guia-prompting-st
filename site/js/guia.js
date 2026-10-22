@@ -21,14 +21,17 @@
     // Laboratorios optativos: van al final para no mover los índices guardados (marcador, último lugar)
     ['lab-proyecto', 'D', 'Proyecto guiado: inscripción con cupos', 'opt'], ['lab-trabado', 'E', 'Cuando te trabás', 'opt'],
     ['lab-mejorar', 'F', 'Mejorá lo que ya construiste', 'opt'], ['lab-publicar', 'G', 'Publicar tu proyecto', 'opt'],
-    ['atajos', 'H', 'Atajos y comandos', 'opt']
+    ['atajos', 'H', 'Atajos y comandos', 'opt'],
+    // Examen final: se muestra después del glosario; no cuenta entre los 17 (se aprueba, no se marca)
+    ['examen', '★', 'Examen final', 'exam']
   ];
 
   var $ = function (id) { return document.getElementById(id); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
   // Un laboratorio optativo aparece solo cuando su sección ya está en la guía
   CHAPTERS = CHAPTERS.filter(function (c) { return !c[3] || $(c[0]); });
-  function isOpt(i) { return !!(CHAPTERS[i] && CHAPTERS[i][3]); }
+  function isOpt(i) { return !!(CHAPTERS[i] && CHAPTERS[i][3] === 'opt'); }
+  function isExam(i) { return !!(CHAPTERS[i] && CHAPTERS[i][3] === 'exam'); }
   var body = document.body;
   var drawer = $('drawer'), list = $('drawer-list'), banner = $('banner'), menu = $('account-menu');
   var toggleBtn = document.querySelector('[data-action="toggle-drawer"]');
@@ -38,7 +41,8 @@
   var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, certificate: null, quiz: null, bannerTarget: null };
   // Capítulos y anexos que cuentan para el certificado (todo menos el índice y los optativos)
   var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice' && !c[3]; });
-  var OPTIONAL = CHAPTERS.filter(function (c) { return c[3]; });
+  var OPTIONAL = CHAPTERS.filter(function (c) { return c[3] === 'opt'; });
+  var EXAM = CHAPTERS.filter(function (c) { return c[3] === 'exam'; }); // [] o [examen]
   var flashTimer = null, raf = null, lastFocus = null;
   var novedades = null; // consentimiento para recibir novedades: { acepta, at }
 
@@ -56,6 +60,7 @@
   function label(i) {
     var c = CHAPTERS[i];
     if (!c) return '';
+    if (c[3] === 'exam') return c[2];
     if (/\d/.test(c[1])) return 'Capítulo ' + Number(c[1]) + ' · ' + c[2];
     if (c[1] !== '·') return 'Anexo ' + c[1] + ' · ' + c[2];
     return c[2];
@@ -108,19 +113,24 @@
     track();
   }
 
+  function doneId(id) { return id === 'examen' ? quizOk() : !!state.finished[id]; }
   function modStatus(id) {
+    if (id === 'examen') return quizOk() ? 'done' : state.quiz ? 'doing' : 'todo';
     if (state.finished[id]) return 'done';
     var f = chapterFields(id);
     return f.done > 0 || (state.last && IDS[state.last.idx] === id) ? 'doing' : 'todo';
   }
   function chipLabel(c) {
+    if (c[3] === 'exam') return 'Certificado';
     return /\d/.test(c[1]) ? 'Cap. ' + c[1] : (c[1] !== '·' ? 'Anexo ' + c[1] : 'Intro');
   }
   // Próximo paso: donde quedó, si no lo terminó; si no, el primer módulo sin terminar
   function nextStep() {
     var l = state.last && state.last.idx;
-    if (l > 0 && !isOpt(l) && !state.finished[IDS[l]]) return l;
-    for (var i = 1; i < CHAPTERS.length; i++) if (!isOpt(i) && !state.finished[IDS[i]]) return i;
+    if (l > 0 && !isOpt(l) && !isExam(l) && !state.finished[IDS[l]]) return l;
+    for (var i = 1; i < CHAPTERS.length; i++) if (!isOpt(i) && !isExam(i) && !state.finished[IDS[i]]) return i;
+    // Con los 17 terminados, el examen es el próximo paso hasta que se aprueba
+    for (var k = 0; k < CHAPTERS.length; k++) if (isExam(k) && !certReady()) return k;
     return -1;
   }
 
@@ -144,6 +154,7 @@
       '<div class="course__bar"><span class="js-course-bar"></span></div></div></div>' +
       '<a class="st-btn st-btn--lg course__go" id="course-go" href="#"></a>';
     var groups = [['Para empezar', 0, 3], ['Capítulos', 3, 15], ['Anexos', 15, 18]];
+    if (EXAM.length) groups.push(['Examen final', IDS.indexOf('examen'), IDS.indexOf('examen') + 1, 'El último paso para tu certificado.']);
     if (OPTIONAL.length) groups.push(['Laboratorios optativos', 18, CHAPTERS.length, 'Para cuando los necesites: no cuentan para el certificado.']);
     groups.forEach(function (g) {
       var h = document.createElement('h3');
@@ -159,12 +170,12 @@
       ol.className = 'course__grid';
       for (var i = g[1]; i < g[2]; i++) {
         var c = CHAPTERS[i];
-        if (c[0] === 'indice') continue;
+        if (c[0] === 'indice' || (c[3] === 'exam' && g[0] !== 'Examen final')) continue;
         var t = topics[c[0]] || {};
         var li = document.createElement('li');
         li.innerHTML = '<a class="mod" href="#' + c[0] + '"><span class="mod__chip"></span><span class="mod__title"></span>' +
           '<span class="mod__meta"></span><span class="mod__status"></span></a>';
-        li.querySelector('.mod__chip').textContent = chipLabel(c) + (c[3] ? ' · Optativo' : t.tag && t.tag !== 'Anexo' ? ' · ' + t.tag : '');
+        li.querySelector('.mod__chip').textContent = chipLabel(c) + (c[3] === 'opt' ? ' · Optativo' : c[3] ? '' : t.tag && t.tag !== 'Anexo' ? ' · ' + t.tag : '');
         li.querySelector('.mod__title').textContent = t.title || c[2];
         li.firstChild.setAttribute('data-mod', c[0]);
         ol.appendChild(li);
@@ -198,7 +209,7 @@
       '<div class="lms-side__stat"><span class="js-course-text"></span><div class="course__bar"><span class="js-course-bar"></span></div></div>';
     var ul = document.createElement('ol');
     ul.className = 'lms-side__list';
-    FINISHABLE.concat(OPTIONAL).forEach(function (c) {
+    FINISHABLE.concat(EXAM, OPTIONAL).forEach(function (c) {
       if (c === OPTIONAL[0]) {
         var sep = document.createElement('li');
         sep.className = 'lms-side__sep';
@@ -224,7 +235,7 @@
       top.className = 'lms-top';
       top.setAttribute('data-noprint', '');
       top.innerHTML = '<a href="#inicio">← Mi curso</a><span></span>';
-      top.lastChild.textContent = c[3] ? 'Laboratorio optativo · no cuenta para el certificado' : 'Módulo ' + (n + 1) + ' de ' + chain.length;
+      top.lastChild.textContent = c[3] === 'exam' ? 'Último paso para tu certificado' : c[3] ? 'Laboratorio optativo · no cuenta para el certificado' : 'Módulo ' + (n + 1) + ' de ' + FINISHABLE.length;
       sec.insertBefore(top, sec.firstChild);
       var nav = document.createElement('nav');
       nav.className = 'lms-nav';
@@ -237,7 +248,8 @@
       if (next) nav.querySelector('.lms-nav__next span').textContent = next[2];
       sec.appendChild(nav);
     }
-    FINISHABLE.forEach(function (c, n) { addNav(FINISHABLE, c, n); });
+    var main = FINISHABLE.concat(EXAM);
+    main.forEach(function (c, n) { addNav(main, c, n); });
     OPTIONAL.forEach(function (c, n) { addNav(OPTIONAL, c, n); });
   }
 
@@ -250,6 +262,11 @@
     $$('[data-mod]').forEach(function (a) {
       var id = a.getAttribute('data-mod'), st = modStatus(id), f = chapterActivities(id);
       a.className = 'mod is-' + st;
+      if (id === 'examen') {
+        a.querySelector('.mod__meta').textContent = state.quiz ? 'Mejor resultado: ' + state.quiz.score + ' de ' + QUIZ.length : QUIZ.length + ' preguntas · se aprueba con ' + QUIZ_MIN;
+        a.querySelector('.mod__status').textContent = st === 'done' ? '✓ Aprobado' : st === 'doing' ? 'Sin aprobar' : 'Pendiente';
+        return;
+      }
       a.querySelector('.mod__meta').textContent = f.total ? f.done + ' de ' + f.total + (f.total === 1 ? ' actividad' : ' actividades') : 'Lectura';
       a.querySelector('.mod__status').textContent = st === 'done' ? '✓ Completado' : st === 'doing' ? 'En curso' : 'Pendiente';
     });
@@ -257,8 +274,8 @@
       var id = a.getAttribute('data-side');
       a.classList.toggle('is-current', IDS[view] === id);
       if (IDS[view] === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-      a.classList.toggle('is-done', !!state.finished[id]);
-      a.firstChild.textContent = state.finished[id] ? '✓' : '';
+      a.classList.toggle('is-done', doneId(id));
+      a.firstChild.textContent = doneId(id) ? '✓' : '';
     });
     var go = $('course-go'), next = nextStep(), heroGo = document.querySelector('#portada a[href^="#"]:not(.st-btn)');
     if (heroGo) {
@@ -267,8 +284,8 @@
       heroGo.setAttribute('href', next < 0 ? '#curso' : '#' + IDS[next]);
     }
     if (next < 0 && !certReady()) {
-      go.textContent = 'Último paso: la evaluación final →';
-      go.setAttribute('href', '#evaluacion');
+      go.textContent = 'Último paso: el examen final →';
+      go.setAttribute('href', '#examen');
       go.removeAttribute('data-action');
     } else if (next < 0) {
       go.textContent = 'Descargar mi certificado';
@@ -276,7 +293,7 @@
       go.setAttribute('data-action', 'certificate');
     } else {
       var started = n > 0 || (state.last && state.last.idx > 0);
-      go.textContent = (started ? 'Continuar: ' : 'Empezar el curso: ') + shortLabel(next) + (/\d/.test(CHAPTERS[next][1]) || CHAPTERS[next][1] !== '·' ? ' · ' + CHAPTERS[next][2] : '') + ' →';
+      go.textContent = (started ? 'Continuar: ' : 'Empezar el curso: ') + shortLabel(next) + (!isExam(next) && (/\d/.test(CHAPTERS[next][1]) || CHAPTERS[next][1] !== '·') ? ' · ' + CHAPTERS[next][2] : '') + ' →';
       go.setAttribute('href', '#' + IDS[next]);
       go.removeAttribute('data-action');
     }
@@ -284,12 +301,6 @@
 
   // ---- Índice lateral ----
   var items = CHAPTERS.map(function (c) {
-    if (c === OPTIONAL[0]) {
-      var sep = document.createElement('div');
-      sep.className = 'drawer-sep';
-      sep.textContent = 'Laboratorios optativos';
-      list.appendChild(sep);
-    }
     var a = document.createElement('a');
     a.className = 'drawer-item';
     a.href = '#' + c[0];
@@ -297,9 +308,18 @@
     a.children[0].textContent = c[1];
     a.children[1].textContent = c[2];
     a.addEventListener('click', function () { closeDrawer(false); });
-    list.appendChild(a);
     return a;
   });
+  // Orden en pantalla: recorrido, examen y, aparte, los optativos (los índices de CHAPTERS no cambian)
+  items.forEach(function (a, i) { if (!isOpt(i) && !isExam(i)) list.appendChild(a); });
+  items.forEach(function (a, i) { if (isExam(i)) list.appendChild(a); });
+  if (OPTIONAL.length) {
+    var sep = document.createElement('div');
+    sep.className = 'drawer-sep';
+    sep.textContent = 'Laboratorios optativos';
+    list.appendChild(sep);
+  }
+  items.forEach(function (a, i) { if (isOpt(i)) list.appendChild(a); });
   // El índice es el inicio del curso
   items[0].href = '#inicio';
   items[0].children[0].textContent = '⌂';
@@ -311,7 +331,7 @@
       var mark = a.children[2];
       a.classList.toggle('is-current', i === state.current);
       if (i === state.current) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-      mark.textContent = i === bm ? '⚑' : (state.finished[CHAPTERS[i][0]] ? '✓' : '');
+      mark.textContent = i === bm ? '⚑' : (doneId(CHAPTERS[i][0]) ? '✓' : '');
       mark.classList.toggle('is-bookmark', i === bm);
     });
     $('progress-max').style.width = finishedPct().toFixed(1) + '%';
@@ -409,12 +429,13 @@
   }
   function shortLabel(i) {
     var c = CHAPTERS[i];
+    if (c[3] === 'exam') return c[2];
     return /\d/.test(c[1]) ? 'Capítulo ' + Number(c[1]) : (c[1] !== '·' ? 'Anexo ' + c[1] : c[2]);
   }
   function buildFinishCards() {
     CHAPTERS.forEach(function (c, i) {
       var sec = sections[i];
-      if (!sec || c[0] === 'indice') return;
+      if (!sec || c[0] === 'indice' || c[3] === 'exam') return;
       var card = document.createElement('div');
       card.className = 'finish';
       card.setAttribute('data-noprint', '');
@@ -490,13 +511,13 @@
   function certReady() { return allFinished() && (quizOk() || !!state.certificate); }
   var quizBox = null, quizGraded = false; // quizGraded: hay una corrección a la vista
   function buildQuiz() {
-    var sec = $('glosario');
+    var sec = $('examen');
     if (!sec) return;
     quizBox = document.createElement('div');
     quizBox.className = 'quiz';
     quizBox.id = 'evaluacion';
     quizBox.setAttribute('data-noprint', '');
-    var html = '<span class="quiz__eyebrow">EVALUACIÓN FINAL</span><h3 class="quiz__title">Diez situaciones reales</h3>' +
+    var html = '<h3 class="quiz__title">Diez situaciones reales</h3>' +
       '<p class="quiz__lead">Elegí la respuesta que te parezca mejor. Se aprueba con ' + QUIZ_MIN + ' de ' + QUIZ.length + ' y podés intentarlo las veces que quieras. Al aprobar, se habilita tu certificado.</p>' +
       '<div class="quiz__done" hidden></div><form class="quiz__form" novalidate>';
     QUIZ.forEach(function (q, i) {
@@ -550,7 +571,9 @@
     quizGraded = true;
     renderCert();
     renderCourse();
+    renderDrawer();
     renderQuiz(score);
+    if (passed && allFinished() && !state.certificate) setTimeout(downloadCertificate, 700);
     quizBox.querySelector('.quiz__done').scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
   function resetQuiz() {
@@ -642,7 +665,7 @@
   }
 
   function buildCertCard() {
-    var sec = $('glosario');
+    var sec = $('examen') || $('glosario');
     if (!sec) return;
     var card = document.createElement('div');
     card.className = 'cert-card';
@@ -651,7 +674,7 @@
     card.innerHTML = '<div class="cert-card__seal" aria-hidden="true">🎓</div>' +
       '<div class="cert-card__text"><span class="cert-card__eyebrow">CERTIFICADO DE FINALIZACIÓN</span><strong></strong><span class="cert-card__sub"></span></div>' +
       '<div class="cert-card__actions"><button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>' +
-      '<a class="st-btn st-btn--md cert-card__quiz" href="#evaluacion" hidden>Hacer la evaluación final →</a>' +
+      '<a class="st-btn st-btn--md cert-card__quiz" href="#evaluacion" hidden>Ir al examen ↑</a>' +
       '<a class="li-btn" data-linkedin="" target="_blank" rel="noopener" hidden><span aria-hidden="true">in</span>Agregar a mi perfil</a>' +
       '<button type="button" class="li-btn li-btn--outline" data-share="" data-action="share-linkedin" hidden><span aria-hidden="true">in</span>Publicar en LinkedIn</button></div>';
     sec.appendChild(card);
@@ -662,11 +685,11 @@
     body.classList.toggle('cert-ready', ready);
     if (!card) return;
     card.classList.toggle('is-locked', !ready);
-    card.querySelector('strong').textContent = ready ? '¡Completaste toda la guía!' : needsQuiz ? 'Último paso: la evaluación final' : 'Tu certificado te espera al final del recorrido';
+    card.querySelector('strong').textContent = ready ? '¡Completaste toda la guía!' : needsQuiz ? 'Último paso: el examen final' : 'Tu certificado te espera al final del recorrido';
     card.querySelector('.cert-card__sub').textContent = ready
       ? (user ? 'Descargalo con tu nombre, la fecha y un código único.' : 'Ingresá con Google para descargarlo con tu nombre.')
-      : needsQuiz ? 'Terminaste los ' + FINISHABLE.length + ' capítulos. Aprobá la evaluación (' + QUIZ_MIN + ' de ' + QUIZ.length + ') y se habilita tu certificado.'
-      : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + ' y aprobar la evaluación final.';
+      : needsQuiz ? 'Terminaste los ' + FINISHABLE.length + ' capítulos. Aprobá el examen de arriba (' + QUIZ_MIN + ' de ' + QUIZ.length + ') y se habilita tu certificado.'
+      : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + ' y aprobar el examen final.';
     card.querySelector('button').hidden = !ready;
     var toQuiz = card.querySelector('.cert-card__quiz');
     if (toQuiz) toQuiz.hidden = !needsQuiz;
@@ -689,8 +712,8 @@
     $('hero-cert-title').textContent = ready ? '¡Tu certificado está listo!' : 'Obtené tu certificado';
     $('hero-cert-sub').textContent = ready
       ? (user ? 'Descargalo y sumalo a tu perfil de LinkedIn.' : 'Ingresá con Google para descargarlo con tu nombre.')
-      : left === 0 ? 'Te falta un paso: aprobar la evaluación final.'
-      : 'Completá los ' + total + ' capítulos, aprobá la evaluación final y sumalo a tu perfil de LinkedIn.';
+      : left === 0 ? 'Te falta un paso: aprobar el examen final.'
+      : 'Completá los ' + total + ' capítulos, aprobá el examen final y sumalo a tu perfil de LinkedIn.';
     $('hero-cert-progress').hidden = ready;
     $('hero-cert-bar').style.width = (done / total * 100) + '%';
     $('hero-cert-count').textContent = done + ' de ' + total + ' capítulos';
@@ -826,7 +849,7 @@
     closeMenu();
     closeDrawer(false);
     if (!allFinished()) { flash('El certificado se habilita cuando marcás los ' + FINISHABLE.length + ' capítulos como terminados.', 4500); return; }
-    if (!certReady()) { location.hash = 'evaluacion'; flash('Te falta un paso: aprobar la evaluación final.', 4500); return; }
+    if (!certReady()) { location.hash = 'examen'; flash('Te falta un paso: aprobar el examen final.', 4500); return; }
     if (!canEdit()) { askLogin(); return; }
     askName((state.certificate && state.certificate.name) || user.name).then(function (name) {
       if (!name) return;
@@ -861,11 +884,14 @@
     var ids = CHAPTERS.map(function (c) { return c[0]; }), i = ids.indexOf(id);
     var next = -1;
     // Se sigue dentro del mismo recorrido: los obligatorios no mandan a un optativo, ni al revés
-    for (var j = i + 1; j < CHAPTERS.length; j++) if (isOpt(j) === isOpt(i) && !state.finished[CHAPTERS[j][0]]) { next = j; break; }
+    for (var j = i + 1; j < CHAPTERS.length; j++) {
+      if (isExam(j) ? (isOpt(i) || !allFinished() || certReady()) : (isOpt(j) !== isOpt(i) || state.finished[CHAPTERS[j][0]])) continue;
+      next = j; break;
+    }
     var msg = '¡Bien! Llevás ' + finishedCount() + ' de ' + FINISHABLE.length + ' terminados.';
     if (isOpt(i)) msg = '¡Bien! Laboratorio terminado.';
     if (next >= 0) showBanner(msg, { idx: next, delta: 0 }, 'Seguir con ' + shortLabel(next));
-    else if (allFinished() && !certReady()) showBanner('¡Terminaste los ' + FINISHABLE.length + ' capítulos! Te falta la evaluación final.', null, 'Hacer la evaluación', function () { location.hash = 'evaluacion'; });
+    else if (allFinished() && !certReady()) showBanner('¡Terminaste los ' + FINISHABLE.length + ' capítulos! Te falta el examen final.', null, 'Ir al examen', function () { location.hash = 'examen'; });
     else if (allFinished()) showBanner('¡Terminaste toda la guía! 🎉', null, 'Descargar mi certificado', downloadCertificate);
     else flash(msg, 4500);
   }

@@ -35,7 +35,7 @@
   var menuBtn = document.querySelector('[data-action="account-menu"]');
   var sections = CHAPTERS.map(function (c) { return $(c[0]); });
 
-  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, certificate: null, bannerTarget: null };
+  var state = { current: -1, maxIdx: -1, maxPct: 0, bookmark: null, last: null, finished: {}, certificate: null, quiz: null, bannerTarget: null };
   // Capítulos y anexos que cuentan para el certificado (todo menos el índice y los optativos)
   var FINISHABLE = CHAPTERS.filter(function (c) { return c[0] !== 'indice' && !c[3]; });
   var OPTIONAL = CHAPTERS.filter(function (c) { return c[3]; });
@@ -251,7 +251,11 @@
       heroGo.textContent = next < 0 ? 'Ver mi recorrido' : (n > 0 || (state.last && state.last.idx > 0) ? 'Continuar el curso →' : 'Empezar el curso →');
       heroGo.setAttribute('href', next < 0 ? '#curso' : '#' + IDS[next]);
     }
-    if (next < 0) {
+    if (next < 0 && !certReady()) {
+      go.textContent = 'Último paso: la evaluación final →';
+      go.setAttribute('href', '#evaluacion');
+      go.removeAttribute('data-action');
+    } else if (next < 0) {
       go.textContent = 'Descargar mi certificado';
       go.setAttribute('href', '#inicio');
       go.setAttribute('data-action', 'certificate');
@@ -431,6 +435,147 @@
   }
   // ---- Certificado de finalización (al marcar los 17) ----
   function allFinished() { return finishedCount() === FINISHABLE.length; }
+
+  // ---- Evaluación final: 10 situaciones, se aprueba con 8. Habilita el certificado ----
+  // Quien ya descargó el certificado antes de que existiera la evaluación lo conserva.
+  var QUIZ_MIN = 8;
+  var QUIZ = [
+    ['Querés que la IA te arme un turnero. ¿Qué conviene hacer primero?',
+      ['Pedirle que lo construya completo y después corregir lo que falle.', 'Contarle la intención, el contexto y las reglas, y pedirle que te haga preguntas antes de proponer.', 'Pedirle la versión más corta posible para ahorrar tokens.'], 1,
+      'Antes de construir, la IA tiene que entender qué querés lograr y con qué reglas. Las preguntas previas evitan que suponga.', 'cap2'],
+    ['Antes de empezar un proyecto, ¿qué conviene definir para la primera versión?',
+      ['Todas las funciones que se te ocurran, para no tener que agregarlas después.', 'Una versión acotada que resuelva el problema principal y que puedas sostener.', 'La tecnología más avanzada disponible.'], 1,
+      'Una primera versión chica se termina, se prueba y se mejora. Una enorme suele quedar a medias.', 'cap1'],
+    ['Ayer le explicaste a la IA cómo cotizás. Hoy abrís una conversación nueva. ¿Qué pasa?',
+      ['Lo recuerda siempre, porque ya se lo explicaste.', 'Solo lo olvida si cambiás de herramienta.', 'Puede empezar sin nada de lo que explicaste: conviene compartir de nuevo tu ficha de contexto.'], 2,
+      'Una conversación nueva puede empezar de cero. La ficha de contexto existe para no volver a explicar todo.', 'cap4'],
+    ['Querés que la IA revise tu planilla de clientes. ¿Qué le compartís?',
+      ['Una copia con datos de ejemplo que se parezcan a los reales.', 'La planilla real, con nombres, teléfonos y documentos.', 'Nada: que adivine el formato.'], 0,
+      'Los datos personales reales no se comparten. Con datos de ejemplo la IA entiende el formato igual.', 'cap10'],
+    ['La IA te propone un plan por etapas para tu proyecto. ¿Cuál es el paso siguiente?',
+      ['Pedirle que implemente todo de una vez.', 'Revisarlo, aprobarlo y pedirle que empiece solo por la etapa 1.', 'Pedirle siempre otro plan distinto para comparar.'], 1,
+      'El paso “Aprobar” es tuyo: nada se construye hasta que revisás el plan, y se avanza de a una etapa.', 'cap7'],
+    ['Funciona todo menos el botón “Enviar”. ¿Qué le pedís?',
+      ['“Rehacé el formulario desde cero.”', '“Arreglá todo lo que encuentres.”', '“Revisá solo el botón Enviar: te pego el error. Decime la causa antes de cambiar nada.”'], 2,
+      'Un pedido, un problema: marcás dónde mirar, qué proteger y en qué orden responder.', 'cap9'],
+    ['¿Qué significa optimizar tokens?',
+      ['Evitar ambigüedades, repeticiones y datos que no hacen falta, aunque el prompt sea largo.', 'Escribir prompts lo más cortos posible.', 'Usar siempre el modelo más barato.'], 0,
+      'Un prompt largo y claro puede ahorrar cinco correcciones. Optimizar no es escribir menos.', 'cap10'],
+    ['Escribiste en el archivo de instrucciones del proyecto: “nunca toques el archivo de claves”. ¿Está garantizado?',
+      ['Sí: lo que está en ese archivo es obligatorio.', 'Solo si lo escribís en mayúsculas.', 'No: la IA lo lee como contexto. Lo que no puede fallar nunca se protege con permisos o hooks.'], 2,
+      'Una regla no es un candado: la IA intenta seguirla, pero no está obligada.', 'cap10'],
+    ['La IA te dice: “Ya está probado y listo para publicar”. ¿Qué hacés?',
+      ['Le preguntás qué pruebas hizo de verdad y probás vos los casos principales, en compu y celular.', 'Lo publicás: si lo dice, está probado.', 'Le pedís que lo publique ella para no equivocarte.'], 0,
+      'Aceptar “ya está probado” sin ver qué se probó es uno de los errores más comunes.', 'cap11'],
+    ['Tu herramienta guarda inscripciones en una base de datos. Antes de publicarla…',
+      ['Alcanza con que la página tenga una contraseña.', 'Verificás que cada persona solo pueda ver sus propios datos: las reglas de seguridad de la base.', 'No hace falta nada si la herramienta es gratis.'], 1,
+      'Lo que protege los datos son las reglas de la base, no la página. Revisalas antes de publicar.', 'cap11']
+  ];
+  function quizOk() { return !!(state.quiz && state.quiz.ok); }
+  function certReady() { return allFinished() && (quizOk() || !!state.certificate); }
+  var quizBox = null, quizGraded = false; // quizGraded: hay una corrección a la vista
+  function buildQuiz() {
+    var sec = $('glosario');
+    if (!sec) return;
+    quizBox = document.createElement('div');
+    quizBox.className = 'quiz';
+    quizBox.id = 'evaluacion';
+    quizBox.setAttribute('data-noprint', '');
+    var html = '<span class="quiz__eyebrow">EVALUACIÓN FINAL</span><h3 class="quiz__title">Diez situaciones reales</h3>' +
+      '<p class="quiz__lead">Elegí la respuesta que te parezca mejor. Se aprueba con ' + QUIZ_MIN + ' de ' + QUIZ.length + ' y podés intentarlo las veces que quieras. Al aprobar, se habilita tu certificado.</p>' +
+      '<div class="quiz__done" hidden></div><form class="quiz__form" novalidate>';
+    QUIZ.forEach(function (q, i) {
+      html += '<fieldset class="quiz__q" data-q="' + i + '"><legend><span class="quiz__n">' + (i + 1) + '</span><span></span></legend>';
+      q[1].forEach(function (opt, j) {
+        html += '<label class="quiz__opt"><input type="radio" name="q' + i + '" value="' + j + '"><span></span></label>';
+      });
+      html += '<p class="quiz__why" hidden></p></fieldset>';
+    });
+    html += '<p class="quiz__msg" role="alert"></p><div class="quiz__actions"><button type="submit" class="st-btn st-btn--md">Corregir</button></div></form>';
+    quizBox.innerHTML = html;
+    // Textos con textContent: las preguntas llevan comillas y signos
+    QUIZ.forEach(function (q, i) {
+      var fs = quizBox.querySelector('[data-q="' + i + '"]');
+      fs.querySelector('legend span:last-child').textContent = q[0];
+      Array.prototype.forEach.call(fs.querySelectorAll('.quiz__opt span'), function (sp, j) { sp.textContent = q[1][j]; });
+    });
+    quizBox.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); gradeQuiz(); });
+    quizBox.querySelector('form').addEventListener('change', function () { quizBox.querySelector('.quiz__msg').textContent = ''; });
+    sec.appendChild(quizBox);
+  }
+  function gradeQuiz() {
+    var form = quizBox.querySelector('form'), missing = [], score = 0;
+    QUIZ.forEach(function (q, i) { if (!form.querySelector('input[name="q' + i + '"]:checked')) missing.push(i + 1); });
+    if (missing.length) {
+      form.querySelector('.quiz__msg').textContent = 'Te ' + (missing.length === 1 ? 'falta responder la pregunta ' : 'faltan responder las preguntas ') + missing.join(', ') + '.';
+      return;
+    }
+    QUIZ.forEach(function (q, i) { if (+form.querySelector('input[name="q' + i + '"]:checked').value === q[2]) score++; });
+    var passed = score >= QUIZ_MIN;
+    // Al desaprobar no se revelan las respuestas correctas: solo cuáles repasar y dónde
+    QUIZ.forEach(function (q, i) {
+      var fs = form.querySelector('[data-q="' + i + '"]'), ok = +form.querySelector('input[name="q' + i + '"]:checked').value === q[2];
+      fs.classList.toggle('is-ok', ok);
+      fs.classList.toggle('is-bad', !ok);
+      Array.prototype.forEach.call(fs.querySelectorAll('input'), function (inp) { inp.disabled = true; });
+      if (passed) fs.querySelectorAll('.quiz__opt')[q[2]].classList.add('is-right');
+      var why = fs.querySelector('.quiz__why');
+      why.hidden = false;
+      why.innerHTML = '<strong></strong> <span></span> <a></a>';
+      why.querySelector('strong').textContent = ok ? '¡Bien!' : passed ? 'La mejor respuesta:' : 'Esta no es la mejor respuesta.';
+      why.querySelector('span').textContent = passed ? q[3] : ok ? '' : 'Repasalo y volvé a intentarlo.';
+      var a = why.querySelector('a'), ci = IDS.indexOf(q[4]);
+      a.href = '#' + q[4];
+      a.textContent = 'Ver ' + (ci >= 0 ? shortLabel(ci) : 'el capítulo') + ' →';
+    });
+    // Un aprobado no se pierde por volver a intentarlo
+    if (passed || !quizOk()) state.quiz = { score: score, total: QUIZ.length, ok: passed, at: Date.now() };
+    save({ quiz: state.quiz });
+    if (user) { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 300); }
+    quizGraded = true;
+    renderCert();
+    renderCourse();
+    renderQuiz(score);
+    quizBox.querySelector('.quiz__done').scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  function resetQuiz() {
+    var form = quizBox.querySelector('form');
+    quizGraded = false;
+    form.reset();
+    Array.prototype.forEach.call(form.querySelectorAll('.quiz__q'), function (fs) {
+      fs.classList.remove('is-ok', 'is-bad');
+      fs.querySelector('.quiz__why').hidden = true;
+      Array.prototype.forEach.call(fs.querySelectorAll('input'), function (inp) { inp.disabled = false; });
+      Array.prototype.forEach.call(fs.querySelectorAll('.quiz__opt'), function (o) { o.classList.remove('is-right'); });
+    });
+    form.hidden = false;
+    form.querySelector('.quiz__actions').hidden = false;
+    quizBox.querySelector('.quiz__done').hidden = true;
+    form.querySelector('fieldset').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+  // justGraded: puntaje recién corregido (se muestran las respuestas); sin él, solo el resumen
+  function renderQuiz(justGraded) {
+    if (!quizBox) return;
+    var done = quizBox.querySelector('.quiz__done'), form = quizBox.querySelector('form');
+    var graded = typeof justGraded === 'number', score = graded ? justGraded : (state.quiz && state.quiz.score);
+    if (!graded && quizGraded) return; // no tapar la corrección que se está leyendo
+    if (!graded && !quizOk()) { done.hidden = true; return; }
+    var passed = graded ? score >= QUIZ_MIN : true;
+    done.hidden = false;
+    done.className = 'quiz__done ' + (passed ? 'is-pass' : 'is-fail');
+    done.innerHTML = '<strong></strong><p></p><div class="quiz__done-actions"></div>';
+    done.querySelector('strong').textContent = passed ? '¡Aprobaste! ' + score + ' de ' + QUIZ.length : score + ' de ' + QUIZ.length + ': todavía no';
+    done.querySelector('p').textContent = passed
+      ? (allFinished() ? 'Ya podés descargar tu certificado.' : 'Tu certificado se habilita cuando marques los ' + FINISHABLE.length + ' capítulos como terminados.')
+      : 'Necesitás ' + QUIZ_MIN + ' respuestas correctas. Abajo te marcamos cuáles repasar y en qué capítulo; después volvé a intentarlo.';
+    var acts = done.querySelector('.quiz__done-actions');
+    if (passed && allFinished()) acts.insertAdjacentHTML('beforeend', '<button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar mi certificado</button>');
+    acts.insertAdjacentHTML('beforeend', '<button type="button" class="quiz__retry">' + (passed ? 'Volver a hacerla' : 'Intentar de nuevo') + '</button>');
+    acts.querySelector('.quiz__retry').addEventListener('click', resetQuiz);
+    // Sin corrección recién hecha (ya aprobada antes), el formulario queda guardado
+    form.hidden = !graded;
+    if (graded) form.querySelector('.quiz__actions').hidden = true;
+  }
   // ---- Novedades (consentimiento expreso, revocable desde el menú de la cuenta) ----
   function setNovedades(on, quiet) {
     if (!canEdit()) { askLogin(); return; }
@@ -491,20 +636,26 @@
     card.innerHTML = '<div class="cert-card__seal" aria-hidden="true">🎓</div>' +
       '<div class="cert-card__text"><span class="cert-card__eyebrow">CERTIFICADO DE FINALIZACIÓN</span><strong></strong><span class="cert-card__sub"></span></div>' +
       '<div class="cert-card__actions"><button type="button" class="st-btn st-btn--md" data-action="certificate">Descargar certificado</button>' +
+      '<a class="st-btn st-btn--md cert-card__quiz" href="#evaluacion" hidden>Hacer la evaluación final →</a>' +
       '<a class="li-btn" data-linkedin="" target="_blank" rel="noopener" hidden><span aria-hidden="true">in</span>Agregar a mi perfil</a>' +
       '<button type="button" class="li-btn li-btn--outline" data-share="" data-action="share-linkedin" hidden><span aria-hidden="true">in</span>Publicar en LinkedIn</button></div>';
     sec.appendChild(card);
   }
   function renderCert() {
-    var card = $('certificado'), ready = allFinished(), left = FINISHABLE.length - finishedCount();
+    var card = $('certificado'), ready = certReady(), left = FINISHABLE.length - finishedCount();
+    var needsQuiz = allFinished() && !ready;
     body.classList.toggle('cert-ready', ready);
     if (!card) return;
     card.classList.toggle('is-locked', !ready);
-    card.querySelector('strong').textContent = ready ? '¡Completaste toda la guía!' : 'Tu certificado te espera al final del recorrido';
+    card.querySelector('strong').textContent = ready ? '¡Completaste toda la guía!' : needsQuiz ? 'Último paso: la evaluación final' : 'Tu certificado te espera al final del recorrido';
     card.querySelector('.cert-card__sub').textContent = ready
       ? (user ? 'Descargalo con tu nombre, la fecha y un código único.' : 'Ingresá con Google para descargarlo con tu nombre.')
-      : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + '.';
+      : needsQuiz ? 'Terminaste los ' + FINISHABLE.length + ' capítulos. Aprobá la evaluación (' + QUIZ_MIN + ' de ' + QUIZ.length + ') y se habilita tu certificado.'
+      : 'Te ' + (left === 1 ? 'falta 1 capítulo' : 'faltan ' + left + ' capítulos') + ' por marcar como terminado' + (left === 1 ? '' : 's') + ' y aprobar la evaluación final.';
     card.querySelector('button').hidden = !ready;
+    var toQuiz = card.querySelector('.cert-card__quiz');
+    if (toQuiz) toQuiz.hidden = !needsQuiz;
+    renderQuiz();
     renderHeroCert(ready, left);
     var li = linkedinUrl();
     $$('[data-linkedin]').forEach(function (a) {
@@ -523,7 +674,8 @@
     $('hero-cert-title').textContent = ready ? '¡Tu certificado está listo!' : 'Obtené tu certificado';
     $('hero-cert-sub').textContent = ready
       ? (user ? 'Descargalo y sumalo a tu perfil de LinkedIn.' : 'Ingresá con Google para descargarlo con tu nombre.')
-      : 'Completá los ' + total + ' capítulos y sumalo a tu perfil de LinkedIn.';
+      : left === 0 ? 'Te falta un paso: aprobar la evaluación final.'
+      : 'Completá los ' + total + ' capítulos, aprobá la evaluación final y sumalo a tu perfil de LinkedIn.';
     $('hero-cert-progress').hidden = ready;
     $('hero-cert-bar').style.width = (done / total * 100) + '%';
     $('hero-cert-count').textContent = done + ' de ' + total + ' capítulos';
@@ -659,6 +811,7 @@
     closeMenu();
     closeDrawer(false);
     if (!allFinished()) { flash('El certificado se habilita cuando marcás los ' + FINISHABLE.length + ' capítulos como terminados.', 4500); return; }
+    if (!certReady()) { location.hash = 'evaluacion'; flash('Te falta un paso: aprobar la evaluación final.', 4500); return; }
     if (!canEdit()) { askLogin(); return; }
     askName((state.certificate && state.certificate.name) || user.name).then(function (name) {
       if (!name) return;
@@ -697,6 +850,7 @@
     var msg = '¡Bien! Llevás ' + finishedCount() + ' de ' + FINISHABLE.length + ' terminados.';
     if (isOpt(i)) msg = '¡Bien! Laboratorio terminado.';
     if (next >= 0) showBanner(msg, { idx: next, delta: 0 }, 'Seguir con ' + shortLabel(next));
+    else if (allFinished() && !certReady()) showBanner('¡Terminaste los ' + FINISHABLE.length + ' capítulos! Te falta la evaluación final.', null, 'Hacer la evaluación', function () { location.hash = 'evaluacion'; });
     else if (allFinished()) showBanner('¡Terminaste toda la guía! 🎉', null, 'Descargar mi certificado', downloadCertificate);
     else flash(msg, 4500);
   }
@@ -1107,6 +1261,7 @@
     if (state.bookmark) p.bookmark = state.bookmark;
     if (state.last) p.last = state.last;
     if (state.certificate) p.certificate = state.certificate;
+    if (state.quiz) p.quiz = state.quiz;
     var at = state.last || state.bookmark;
     if (at) p.where = label(at.idx); // texto legible para el panel de seguimiento
     return p;
@@ -1152,10 +1307,12 @@
     if (remote.bookmark && (!state.bookmark || (remote.bookmark.at || 0) > (state.bookmark.at || 0))) state.bookmark = remote.bookmark;
     if (!state.last && remote.last) state.last = remote.last;
     if (remote.certificate && !state.certificate) state.certificate = remote.certificate;
+    if (remote.quiz && (!state.quiz || (remote.quiz.ok && !state.quiz.ok))) state.quiz = remote.quiz;
     var rf = remote.finished || {};
     for (var id in rf) if (!state.finished[id]) state.finished[id] = rf[id];
     var local = { maxIdx: state.maxIdx, maxPct: state.maxPct, finished: state.finished };
     if (state.certificate) local.certificate = state.certificate;
+    if (state.quiz) local.quiz = state.quiz;
     if (state.bookmark) local.bookmark = state.bookmark;
     if (state.last) local.last = state.last;
     var saved = load();
@@ -1347,7 +1504,9 @@
   state.last = saved.last || null;
   state.finished = saved.finished || {};
   state.certificate = saved.certificate || null;
+  state.quiz = saved.quiz || null;
   buildFinishCards();
+  buildQuiz(); // antes del certificado: es el último paso para habilitarlo
   buildCertCard(); // va después del "¿Terminaste?" del glosario
   buildCourse(); // "Continuar" del inicio reemplaza al aviso de "La última vez llegaste a…"
   buildSeguir();

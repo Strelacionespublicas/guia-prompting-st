@@ -62,6 +62,7 @@
     var p = u.progress || {};
     return (p.finishedCount || 0) + ' de ' + (p.finishedTotal || 17);
   }
+  function quiz(u) { return u.progress && u.progress.quiz; }
   function nov(u) { return !!(u.profile && u.profile.novedades && u.profile.novedades.acepta); }
   function name(u) { return (u.profile && u.profile.name) || (u.profile && u.profile.email) || 'Sin nombre'; }
 
@@ -88,7 +89,7 @@
       var done = doneOf(u), p = pct(u);
       var where = (u.progress && u.progress.where) || '—';
       return '<tr tabindex="0" data-id="' + esc(u.id) + '">' +
-        '<td><div class="adm-name">' + esc(name(u)) + (cert(u) ? ' <span class="adm-cert" title="Certificado emitido">🎓</span>' : '') + (nov(u) ? ' <span class="adm-cert" title="Acepta recibir novedades">✉</span>' : '') + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
+        '<td><div class="adm-name">' + esc(name(u)) + (cert(u) ? ' <span class="adm-cert" title="Certificado emitido">🎓</span>' : '') + (nov(u) ? ' <span class="adm-cert" title="Acepta recibir novedades">✉</span>' : '') + (quiz(u) ? ' <span class="adm-quiz' + (quiz(u).ok ? ' is-ok' : '') + '" title="Evaluación final: mejor resultado">' + quiz(u).score + '/' + (quiz(u).total || 10) + '</span>' : '') + '</div><div class="adm-email">' + esc(u.profile && u.profile.email) + '</div></td>' +
         '<td><div class="adm-meter"><span style="width:' + p + '%"></span></div><span class="adm-num">' + finished(u) + '</span></td>' +
         '<td>' + esc(where) + '</td>' +
         '<td><span class="adm-num">' + done + '</span> de ' + total + '</td>' +
@@ -130,12 +131,12 @@
 
   function csv() {
     var cell = function (v) { v = v === true ? 'Sí' : v === false || v == null ? '' : String(v); return '"' + v.replace(/"/g, '""') + '"'; };
-    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad', 'Certificado', 'Acepta novedades'].concat(order.map(function (id) { return labels[id]; }));
+    var head = ['Nombre', 'Email', '% terminado', 'Dónde está', 'Espacios completados', 'Última actividad', 'Certificado', 'Evaluación final', 'Acepta novedades'].concat(order.map(function (id) { return labels[id]; }));
     var lines = [head.map(cell).join(',')];
     users.forEach(function (u) {
       var d = lastActivity(u), f = u.fields || {};
       var c = cert(u);
-      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '', c ? c.code + ' (' + new Date(c.at).toLocaleDateString('es-AR') + ')' : '', nov(u)]
+      lines.push([name(u), u.profile && u.profile.email, pct(u), u.progress && u.progress.where, doneOf(u), d ? d.toLocaleString('es-AR') : '', c ? c.code + ' (' + new Date(c.at).toLocaleDateString('es-AR') + ')' : '', quiz(u) ? quiz(u).score + '/' + (quiz(u).total || 10) + (quiz(u).ok ? ' aprobada' : '') : '', nov(u)]
         .concat(order.map(function (id) { return f[id]; })).map(cell).join(','));
     });
     var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });

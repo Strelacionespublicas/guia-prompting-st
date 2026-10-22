@@ -8,6 +8,7 @@ Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relac
   - `users/{uid}`: `profile`, `progress` (incluye `finished` por capítulo), `fields` (respuestas por id de campo), `stats`.
   - `content/guia`: ediciones de la docente (`blocks`, `videos`, `extras`), lectura pública.
   - `certificates/{código ST-XXXX-XXXX}`: certificados emitidos (`uid`, `name`, `issuedAt`), lectura pública por código para `verificar.html`, que es la URL de "Mostrar credencial" en LinkedIn. Solo se crean con los 17 capítulos terminados.
+  - Evaluación final (`#evaluacion`, al final del glosario, antes del certificado): 10 situaciones en `QUIZ` (`guia.js`), se aprueba con 8. El resultado va en `users/{uid}.progress.quiz` (`{ score, total, ok, at }`); un aprobado no se pierde al repetirla. Al desaprobar no se muestran las respuestas correctas, solo qué repasar. `certReady()` exige los 17 capítulos y la evaluación aprobada; quien ya tenía `certificate` lo conserva. El control es del navegador: las reglas de Firestore siguen pidiendo solo `finishedCount >= 17`. El panel muestra el puntaje y lo suma al CSV.
   - Las reglas están en `firestore.rules`; la docente las pega a mano en la consola.
 - `site/js/guia.js`: lectura, índice, marcador, capítulos terminados, campos, copiar prompts, PDF "Mi avance", sesión.
 - `site/js/contenido.js`: aplica las ediciones de la docente (para todos). `site/js/editor.js`: modo edición (solo admins).

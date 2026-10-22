@@ -528,3 +528,25 @@ body.lms .st-footer{position:relative;z-index:1}
 body.lms #seguir-inicio{max-width:1120px;margin:24px auto 0}
 body:not(.cert-ready) #seguir-inicio,body.view-chapter #seguir-inicio{display:none}
 body.lms.view-home #seguir{display:none}
+
+/* "Lo que viene": novedad en formato visual */
+.viene{break-inside:avoid;border:2px solid #78BDC4;border-radius:14px;padding:22px 24px;margin:32px 0;background:#F7F8F3}
+.viene__kicker{font:700 11px/1 Inter,sans-serif;letter-spacing:.12em;color:#D32B36;margin-bottom:10px}
+.viene__title{font-size:22px;margin:0 0 8px}
+.viene__lead{margin:0 0 16px;font-size:15.5px;line-height:1.55}
+.viene__ico{width:40px;height:40px;flex:none;padding:9px;box-sizing:border-box;border-radius:10px;background:#DCEEF0;color:#14566D}
+.viene__cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.viene__card{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #DDE1DB;border-radius:10px;padding:14px}
+.viene__card p{margin:0;font-size:14.5px;line-height:1.45}
+.viene__card--new{border:2px solid #F8444F}
+.viene__card--new .viene__ico{background:#FEE0E2;color:#D32B36}
+.viene__label{font:700 11px/1 Inter,sans-serif;letter-spacing:.1em;color:#6F7A7C;margin:3px 0 6px}
+.viene__card--new .viene__label{color:#D32B36}
+.viene__sub{font:700 11px/1 Inter,sans-serif;letter-spacing:.12em;color:#14566D;margin:4px 0 10px}
+.viene__pasos{list-style:none;margin:0 0 14px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.viene__pasos li{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #DDE1DB;border-radius:10px;padding:12px}
+.viene__pasos strong{display:block;font:700 14px/1.2 Inter,sans-serif;color:#012C3D}
+.viene__pasos span{display:block;font-size:13.5px;line-height:1.4;color:#4D5759;margin-top:2px}
+.viene__chips{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.viene__chips li{padding:5px 12px;border-radius:999px;background:#FBF1DD;color:#8A5A0B;font:600 12.5px/1.2 Inter,sans-serif}
+.viene__nota{margin:12px 0 0;font-size:13px;color:#6F7A7C}

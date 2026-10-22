@@ -23,6 +23,9 @@ Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relac
 - Novedades: consentimiento expreso y revocable, guardado en `users/{uid}.profile.novedades` (`{ acepta, at }`). Se pide en el diálogo del certificado (casilla sin marcar), en el menú de la cuenta y en el bloque "Seguí con ST". El panel muestra ✉, lo suma al CSV y copia los correos de quienes aceptaron. Si cambia el uso de esos datos, actualizar `site/privacidad.html`.
 - "Seguí con ST" (`buildSeguir()`): servicios definidos en `window.GUIA_SERVICIOS` (`site/js/firebase-config.js`), con botón a WhatsApp. Se ve al final del glosario y, en el inicio, solo con el certificado listo.
 
+## Formato visual
+- Rótulos de recuadro con ícono: clase `rot rot--<ícono>` en el div del rótulo (target, lapiz, tilde, alerta, rayo, info, mic). Listas de "Qué vas a aprender" con tilde: `lista-ok`. Párrafos que empiezan con un rótulo en negrita ("Objetivo.", "Qué juntar."…): `dato dato--<ícono>`. Recuadros que comparan opciones: `tarjetas` en el contenedor. Pasos numerados: `ol.pasos`. Los íconos son SVG en CSS (`--ico`), así que el texto y los ids no cambian. Contenido nuevo: usar estas clases en vez de párrafos largos.
+
 ## Cuidados
 - Los ids `data-field` (respuestas) y `data-edit` (bloques editables) de `site/index.html` son estables: no renumerarlos. Si se agrega contenido, correr `scripts/marcar-editables.py` (agrega ids nuevos sin tocar los existentes). `scripts/marcar-campos.py` solo corre sobre HTML sin campos marcados.
 - Tras cambiar contenido o estilos de impresión, regenerar el PDF con `npm run pdf` (requiere red para traer las ediciones desde Firestore).

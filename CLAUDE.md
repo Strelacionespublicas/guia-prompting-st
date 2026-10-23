@@ -2,6 +2,18 @@
 
 Sitio estático (sin framework) de la "Guía práctica de prompting" de ST Relaciones Públicas. Dueña: Stella (docente). Público: alumnos del curso de Claude y Codex, muchos sin conocimientos técnicos. Todo el texto de la interfaz va en español argentino con voseo.
 
+Mapa del sitio para reutilizar en próximas guías: `docs/mapa-del-sitio.md`. Guiones de los videos: `docs/guiones-videos.md`.
+
+## Cómo trabajamos (lo aprendido en las iteraciones)
+- **Nada se publica sin el OK de Stella.** Cada cambio va en una rama, se prueba con los emuladores en compu y celular, se le mandan capturas, y recién con su OK se hace fast-forward a `main` y push. Decir siempre qué está implementado, qué se probó y qué falta.
+- **Primero el plan o el mapa, después construir.** Ante un pedido grande, proponer el plan (con el método IDEA de la guía) y esperar aprobación. Construir sin mapa obligó a reordenar la guía varias veces.
+- **No inventar** precios, videos, enlaces, testimonios ni resultados de pruebas. Datos de herramientas, planes y precios: verificarlos en fuentes actuales, citarlas y escribir "Revisado en <mes año>" con "verificalo en la ayuda oficial".
+- **Contenido:** con la voz de Stella, nunca copiando textos de terceros (las ideas se reescriben); ejemplos no técnicos y un mismo caso a lo largo de la guía (el turnero del centro de estética). Más contenido no es mejor: priorizar experiencia (videos, examen, interacción) antes que capítulos nuevos.
+- **De la documentación técnica** (por ejemplo, la de Claude Code), quedarse solo con lo útil para alumnos sin conocimientos técnicos y decir qué se dejó afuera.
+- **Lo que no se puede romper:** el avance y las respuestas guardadas de los alumnos (ids estables, índices de `CHAPTERS`), los 17 módulos que piden las reglas para el certificado, y los certificados ya emitidos (quien tiene uno lo conserva).
+- **Revisar los casos borde de cuentas:** navegadores compartidos, cierre de sesión, otro dispositivo. Un examen no debe revelar las respuestas al desaprobar.
+- **Piezas para redes:** carruseles en HTML renderizados con Playwright, con el diseño de los anteriores (en el scratchpad de la sesión): PNG 1080×1350 para Instagram, PDF para LinkedIn y textos por red. En Instagram el llamado es "Comentá GUÍA" (respuesta automática de ManyChat); en LinkedIn, "link en el primer comentario". Indicar el objetivo de cada pieza.
+
 ## Arquitectura
 - `site/` se publica tal cual en Cloudflare Pages (proyecto `guia-prompting-st`, dominio propio `guia.strelacionespublicas.com.ar`, DNS en Hostinger con CNAME a `guia-prompting-st.pages.dev`; tiene que figurar también en los dominios autorizados de Firebase Auth): cada push a `main` en GitHub se despliega solo (build output directory: `site`, sin comando de build; encabezados en `site/_headers`). Antes estaba en Netlify, que se dejó porque el plan gratis pasó a créditos y pausó los deploys; Vercel Hobby no permite uso comercial. No hay secretos en el repo: los datos de los alumnos viven en Firestore. Los bundles de `src/` se compilan con `npm run build` y se commitean en `site/js/`.
 - Firebase (`guia-de-prompting`): Auth con Google + Firestore lite.

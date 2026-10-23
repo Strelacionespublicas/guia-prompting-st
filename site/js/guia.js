@@ -50,6 +50,19 @@
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; }
   }
+  // El avance local pertenece a una cuenta (owner). El avance sin cuenta se suma a la primera que ingresa;
+  // el de otra cuenta en el mismo navegador no se hereda (ni sus capítulos ni su código de certificado).
+  function resetLocal() {
+    state.maxIdx = -1; state.maxPct = 0; state.bookmark = null; state.last = null;
+    state.finished = {}; state.certificate = null; state.quiz = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+  }
+  function claimLocal(uid) {
+    var saved = load();
+    if (saved.owner && saved.owner !== uid) { resetLocal(); saved = {}; }
+    saved.owner = uid;
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+  }
   function save(patch) {
     var saved = load();
     for (var k in patch) saved[k] = patch[k];
@@ -857,7 +870,13 @@
       state.certificate = { name: name, code: c.code || newCode(), at: c.at || Date.now(), registered: !!(c.registered && c.name === name) };
       save({ certificate: state.certificate });
       flash('Preparando tu certificado…', 6000);
-      var reg = state.certificate.registered ? Promise.resolve() : registerCertificate().catch(function () { /* sin verificación pública */ });
+      var reg = state.certificate.registered ? Promise.resolve() : registerCertificate().catch(function (e) {
+        // Código registrado a nombre de otra cuenta (por ejemplo, heredado en un navegador compartido): uno nuevo
+        if (!e || e.code !== 'permission-denied') return;
+        state.certificate.code = newCode();
+        save({ certificate: state.certificate });
+        return registerCertificate();
+      }).catch(function () { /* sin verificación pública */ });
       Promise.all([loadPdfLib(), loadShare(), reg]).then(function () {
         return window.GuiaCompartir.canvas(certData(), 3);
       }).then(function (canvas) {
@@ -1357,6 +1376,7 @@
     if (state.bookmark) local.bookmark = state.bookmark;
     if (state.last) local.last = state.last;
     var saved = load();
+    if (!state.certificate) delete saved.certificate;
     for (var k in local) saved[k] = local[k];
     try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
   }
@@ -1385,7 +1405,7 @@
   function logout() {
     closeMenu();
     flush();
-    backend.signOut().then(function () { flash('Cerraste sesión. Tus respuestas quedaron guardadas en tu cuenta.'); });
+    backend.signOut(); // onUser(null) limpia el navegador y recarga
   }
 
   function isAdmin(email) {
@@ -1416,6 +1436,14 @@
     loaded = false;
     body.classList.toggle('is-admin', !!(u && isAdmin(u.email)));
     if (!u && editing() && window.GuiaEditor) window.GuiaEditor.stop();
+    if (!u && user) {
+      // Se cerró la sesión (con el botón, desde otra pestaña o porque venció): el navegador queda limpio
+      // para la próxima persona; el avance sigue en la cuenta
+      resetLocal();
+      try { sessionStorage.setItem(KEY + ':flash', 'Cerraste sesión. Tu avance quedó guardado en tu cuenta.'); } catch (e) {}
+      location.reload();
+      return;
+    }
     if (!u) {
       user = null;
       setAuthClass('auth-out');
@@ -1435,11 +1463,20 @@
     setAuthClass('auth-in');
     setEditable(false);
     setSaveState('saved');
+    claimLocal(u.uid);
     backend.load(u.uid).then(function (data) {
       if (user !== u) return;
       isNew = !data;
       data = data || {};
       var hadBookmark = state.bookmark;
+      // Un certificado registrado que no está en esta cuenta es de otra persona: no se hereda
+      var rc = data.progress && data.progress.certificate;
+      if (state.certificate && state.certificate.registered && !(rc && rc.code === state.certificate.code)) {
+        state.certificate = null;
+        var sv = load();
+        delete sv.certificate;
+        try { localStorage.setItem(KEY, JSON.stringify(sv)); } catch (e) {}
+      }
       mergeProgress(data.progress);
       novedades = (data.profile && data.profile.novedades) || null;
       renderNovedades();
@@ -1556,4 +1593,8 @@
   window.addEventListener('hashchange', route);
   startBackend();
   setTimeout(track, 300);
+  try {
+    var pendingFlash = sessionStorage.getItem(KEY + ':flash');
+    if (pendingFlash) { sessionStorage.removeItem(KEY + ':flash'); flash(pendingFlash, 4500); }
+  } catch (e) {}
 })();
